@@ -177,9 +177,8 @@ void goomba_item_dump( struct goomba_item *item ) {
 				break;
 
 			case GOOMBA_ACTION:
-				printf( "(action) action=%d callback=0x%x\n",
-					item->action_data.action,
-					item->action_data.callback );
+				printf( "(action) action=%d\n",
+					item->action_data.action );
 				break;
 
 			default:

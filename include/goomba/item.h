@@ -57,7 +57,6 @@ struct goomba_item_menu {
 
 struct goomba_item_action {
 	goomba_action_type action;
-	int (*callback)(void);
 };
 
 struct goomba_item {
@@ -65,6 +64,7 @@ struct goomba_item {
 	struct goomba_item *prev;
 	goomba_item_type type;
 	char *text;
+	int (*callback)(void);
 	union {
 		struct goomba_item_int int_data;
 		struct goomba_item_enum enum_data;

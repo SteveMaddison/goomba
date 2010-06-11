@@ -13,7 +13,7 @@ int main( int argc, char *argv[] ) {
 	struct goomba_item *item_number = goomba_item_create( GOOMBA_INT );
 	struct goomba_item *item_enum = goomba_item_create( GOOMBA_ENUM );
 
-	item_exit->action_data.callback = quit_callback;
+	item_exit->callback = quit_callback;
 	item_exit->text = "Exit";
 
 	goomba_add_enum_option( item_enum, "FIRST", 1 );
