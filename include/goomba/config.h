@@ -2,15 +2,15 @@
 #define _GOOMBA_CONFIG_H_ 1
 
 struct goomba_config_rgb {
-	int red;
-	int green;
-	int blue;
+	unsigned char red;
+	unsigned char green;
+	unsigned char blue;
 };
 
 struct goomba_config_background {
 	struct goomba_config_rgb fill;
 	char *image;
-	int alpha; /* percentage */
+	unsigned char alpha;
 };
 
 struct goomba_config_font {
@@ -21,7 +21,7 @@ struct goomba_config_font {
 
 struct goomba_config_selector {
 	struct goomba_config_rgb fill;
-	int alpha; /* percentage */
+	unsigned char alpha;
 };
 
 struct goomba_config {

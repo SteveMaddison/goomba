@@ -1,4 +1,4 @@
-CFLAGS = -I./include
+CFLAGS = -I./include -fPIC
 LIB = goomba
 
 SRCS = src/config.c src/gui.c src/item.c
@@ -11,7 +11,7 @@ $(LIB).so: $(SRCS)
 	gcc $(CFLAGS) -o $(LIB).so -shared $(SRCS)
 
 test: test.o $(LIB)
-	gcc -o test test.o $(LIB).so
+	gcc -o test test.o $(LIB).so -lSDL
 
 test.o: src/test.c
 	gcc $(CFLAGS) -o test.o -c src/test.c
