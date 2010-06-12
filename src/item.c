@@ -252,7 +252,7 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 					char *dir = NULL;
 					
 					if( strcmp( item->text, ".." ) == 0 ) {
-						char *slash = strchr( menu->text, '/' );
+						char *slash = strrchr( menu->text, '/' );
 						if( slash ) {
 							*slash = 0;
 							dir = malloc( strlen(menu->text) + 1 );
@@ -421,7 +421,7 @@ struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *sta
 	while( (dentry = readdir( dir )) ) {
 		if( strcmp( dentry->d_name, "." ) != 0 ) {
 			struct goomba_item *item = goomba_item_create( GOOMBA_FILE );
-			char *buf = malloc( dentry->d_reclen );
+			char *buf = malloc( strlen(dentry->d_name) + 1 );
 		
 			if( buf == NULL ) {
 				fprintf( stderr, "Couldn't allocate buffer for file name.\n" );

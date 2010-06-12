@@ -97,6 +97,7 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 				sub_items += 2;
 			}
 			if( sub_items > max_items ) {
+				/* Scrolling */
 				sub_items = max_items;
 			}
 			offset = (screen->h - (bar.height * sub_items)) / 2;
