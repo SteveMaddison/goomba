@@ -38,7 +38,69 @@ struct goomba_item *goomba_item_create( goomba_item_type type ) {
 }
 
 void goomba_item_free( struct goomba_item *item ) {
+	struct goomba_item *next = NULL;
 	
+	if( item ) {
+		next = item->next;
+		
+		switch( item->type ) {
+			case GOOMBA_INT:
+			case GOOMBA_STRING:
+			case GOOMBA_ACTION:
+				free( item );
+				item = NULL;
+				break;
+
+			case GOOMBA_ENUM:
+				if( item->enum_data.options ) {
+					struct goomba_item_enum_option *p = item->enum_data.options;
+					struct goomba_item_enum_option *n = NULL;
+					/* Break the circular list. */
+					p->prev->next = NULL;
+					while( p != NULL ) {
+						n = p->next;
+						free( p );
+						p = n;
+					}
+				}
+				free( item );
+				item = NULL;
+				break;
+
+			case GOOMBA_FILE:
+				if( item->file_data.filters ) {
+					struct goomba_file_filter *p = item->file_data.filters;
+					struct goomba_file_filter *n = NULL;
+					while( p != NULL ) {
+						n = p->next;
+						free( p );
+						p = n;
+					}
+				}
+				free( item );
+				item = NULL;
+				break;
+
+			case GOOMBA_MENU:
+				if( item->menu_data.items ) {
+					struct goomba_item *p = item->menu_data.items;
+					struct goomba_item *n = NULL;
+					/* Break the circular list. */
+					p->prev->next = NULL;
+					while( p != NULL ) {
+						n = p->next;
+						goomba_item_free( p );
+						p = n;
+					}
+				}
+				free( item );
+				break;
+
+			default:
+				fprintf( stderr, "Unknown goomba item type %d.\n", item->type );
+				break;
+		}
+	}
 }
 
 int goomba_append_child( struct goomba_item *parent, struct goomba_item *child ) {
@@ -58,6 +120,7 @@ int goomba_append_child( struct goomba_item *parent, struct goomba_item *child )
 				head->prev = child;
 				tail->next = child;
 			}
+			child->parent = parent;
 			break;
 		default:
 			fprintf( stderr, "Can't add child to goomba item type %d.\n", parent->type );
@@ -88,6 +151,9 @@ int goomba_add_enum_option( struct goomba_item *enum_item, char *name, int value
 				option->next = option;
 				option->prev = option;
 				enum_item->enum_data.selected = option;
+				if( enum_item->enum_data.value ) {
+					*enum_item->enum_data.value = option->value;
+				}
 			}
 			else {
 				struct goomba_item_enum_option *head = enum_item->enum_data.options;
@@ -101,6 +167,146 @@ int goomba_add_enum_option( struct goomba_item *enum_item, char *name, int value
 	}
 
 	return 0;
+}
+
+
+void goomba_item_advance( struct goomba_item *item ) {
+	if( item ) {
+		switch( item->type ) {
+			case GOOMBA_INT:
+				*item->int_data.value += item->int_data.step;
+				if( *item->int_data.value > item->int_data.max ) {
+					*item->int_data.value = item->int_data.max;
+				}
+				break;
+			case GOOMBA_ENUM:
+				item->enum_data.selected = item->enum_data.selected->next;
+				*item->enum_data.value = item->enum_data.selected->value;
+				break;
+			
+			case GOOMBA_MENU:
+				item->menu_data.selected = item->menu_data.selected->next;
+				break;
+
+			default:
+				/* No effect */
+				break;
+		}
+		if( item->callback && *item->callback ) {
+			item->callback();
+		}
+	}
+}
+
+void goomba_item_retreat( struct goomba_item *item ) {
+	if( item ) {
+		switch( item->type ) {
+			case GOOMBA_INT:
+				*item->int_data.value -= item->int_data.step;
+				if( *item->int_data.value < item->int_data.min ) {
+					*item->int_data.value = item->int_data.min;
+				}
+				break;
+			case GOOMBA_ENUM:
+				item->enum_data.selected = item->enum_data.selected->prev;
+				*item->enum_data.value = item->enum_data.selected->value;
+				break;
+			
+			case GOOMBA_MENU:
+				item->menu_data.selected = item->menu_data.selected->prev;
+				break;
+
+			default:
+				/* No effect */
+				break;
+		}
+		if( item->callback && *item->callback ) {
+			item->callback();
+		}
+	}
+}
+
+struct goomba_item *goomba_item_select( struct goomba_item *item ) {
+	struct goomba_item *new_item = item;
+
+	if( item ) {
+		switch( item->type ) {
+			case GOOMBA_STRING:
+				break;
+			case GOOMBA_FILE:
+				break;
+			case GOOMBA_MENU:
+				/* Unless the result of selecting the menu item results
+				 * in quitting, we stay in the menu. */
+				if( goomba_item_select( item->menu_data.selected ) == NULL ) {
+					return NULL;
+				}
+				break;
+			case GOOMBA_ACTION:
+				if( item->callback && *item->callback ) {
+					item->callback();
+				}
+				if( item->action_data.action == GOOMBA_BACK ) {
+					new_item = item->parent;
+					if( new_item->type == GOOMBA_MENU ) {
+						new_item = new_item->parent;
+					}
+				}
+				break;
+			default:
+				break;
+		}	
+	}
+	return new_item;
+}
+
+int goomba_item_child_count( struct goomba_item *item ) {
+	int count = 0;
+
+	if( item ) {
+		switch( item->type ) {
+			case GOOMBA_INT:
+			case GOOMBA_STRING:
+			case GOOMBA_ACTION:
+				break;
+				
+			case GOOMBA_ENUM:
+				if( item->enum_data.options ) {
+					struct goomba_item_enum_option *p = item->enum_data.options;
+					do {
+						count++;
+						p = p->next;
+					} while( p != item->enum_data.options );
+				}
+				break;
+
+			case GOOMBA_FILE:
+				if( item->file_data.filters ) {
+					struct goomba_file_filter *p = item->file_data.filters;
+					while( p != NULL ) {
+						count++;
+						p = p->next;
+					}
+				}
+				break;
+
+			case GOOMBA_MENU:
+				if( item->menu_data.items ) {
+					struct goomba_item *p = item->menu_data.items;
+					do {
+						count++;
+						p = p->next;
+					} while( p != item->menu_data.items );
+				}
+				break;
+
+			default:
+				fprintf( stderr, "Unknown goomba item type %d.\n", item->type );
+				break;
+		}
+	}
+
+	return count;
 }
 
 void goomba_item_dump( struct goomba_item *item ) {
@@ -158,6 +364,7 @@ void goomba_item_dump( struct goomba_item *item ) {
 						printf( " [%s](\"%s\")",
 							p->pattern ? p->pattern : "<NULL>",
 							p->description ? p->description : "<NULL>");
+						p = p->next;
 					}
 				}
 				break;

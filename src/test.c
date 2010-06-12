@@ -52,16 +52,26 @@ int main( int argc, char *argv[] ) {
 	struct goomba_item *item_number = goomba_item_create( GOOMBA_INT );
 	struct goomba_item *item_enum = goomba_item_create( GOOMBA_ENUM );
 
-	gui->config.background.fill.red = 255;
+	int int_val = 0;
+	int enum_val = 1;
+
+	gui->config.font.name = "/usr/share/fonts/truetype/freefont/FreeSans.ttf";
 
 	item_exit->callback = quit_callback;
 	item_exit->text = "Exit";
 
+	item_number->text = "INT option";
+	item_number->int_data.max = 9;
+	item_number->int_data.value = &int_val;
+
+	item_enum->text = "My enum";
 	goomba_add_enum_option( item_enum, "FIRST", 1 );
 	goomba_add_enum_option( item_enum, "SECOND", 2 );
 	goomba_add_enum_option( item_enum, "LAST", 3 );
+	item_enum->enum_data.value = &enum_val;
 
 	gui->root = goomba_item_create( GOOMBA_MENU );
+	gui->root->text = "Main Menu";
 	goomba_append_child( gui->root, item_number );
 	goomba_append_child( gui->root, item_enum );
 	goomba_append_child( gui->root, item_exit );
@@ -69,11 +79,7 @@ int main( int argc, char *argv[] ) {
 	goomba_gui_dump( gui );
 
 	sdl_init();
-	sleep( 1 );
-
-	gui_start( gui, screen );
-	sleep( 1 );
-
+	goomba_gui_start( gui, screen );
 	SDL_Quit();
 
 	return 0;
