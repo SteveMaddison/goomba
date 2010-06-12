@@ -259,7 +259,7 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 							strcpy( dir, menu->text );
 						}
 					}
-					else {					
+					else {
 						if( strcmp( menu->text, "/" ) == 0 ) {
 							dir = malloc( strlen(item->text) + 2 );
 							sprintf( dir, "/%s", item->text );
@@ -433,6 +433,23 @@ struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *sta
 				item->text = buf;
 				if( dentry->d_type == DT_DIR ) {
 					item->file_data.dir = 1;
+				}
+				else if( dentry->d_type == DT_LNK ) {
+					/* Is there a better way? */
+					char *tmp = malloc( strlen(dirname) + strlen(dentry->d_name) + 2 );
+					DIR *lnk = NULL;
+					
+					if( tmp == NULL ) {
+						fprintf( stderr, "Couldn't allocate buffer for link name.\n" );
+					}
+					else {
+						sprintf( tmp, "%s/%s", dirname, dentry->d_name );
+						lnk = opendir( tmp );
+						if( lnk && errno != ENOTDIR )
+							item->file_data.dir = 1;
+						closedir( lnk );
+						free( tmp );
+					}
 				}
 				goomba_item_append_child( menu, item );
 			}
