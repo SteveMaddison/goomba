@@ -236,12 +236,18 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 			case GOOMBA_FILE:
 				break;
 			case GOOMBA_MENU:
-				if( item->menu_data.selected->type == GOOMBA_MENU ) {
-					/* Nexted menu: select the first option. */
-					item->menu_data.selected->menu_data.selected = item->menu_data.selected->menu_data.items;
-					return item->menu_data.selected;
+				switch( item->menu_data.selected->type ) {
+					case GOOMBA_MENU:
+						/* Nested menu: select the first option. */
+						item->menu_data.selected->menu_data.selected = item->menu_data.selected->menu_data.items;
+						return item->menu_data.selected;
+						break;
+					case GOOMBA_ACTION:
+						new_item = goomba_item_select( item->menu_data.selected );
+						break;
+					default:
+						break;
 				}
-				new_item = goomba_item_select( item->menu_data.selected );
 				break;
 			case GOOMBA_ACTION:
 				if( item->callback && *item->callback ) {
