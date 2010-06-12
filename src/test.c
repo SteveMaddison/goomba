@@ -2,7 +2,7 @@
 #include <SDL/SDL.h>
 #include <goomba/gui.h>
 
-#define SCREEN_X 640
+#define SCREEN_X 800
 #define SCREEN_Y 480
 #define SCREEN_BPP 32
 
@@ -49,8 +49,10 @@ int sdl_init( void ) {
 int main( int argc, char *argv[] ) {
 	struct goomba_gui *gui = goomba_gui_create();
 	struct goomba_item *item_exit = goomba_item_create( GOOMBA_ACTION );
+	struct goomba_item *item_back = goomba_item_create( GOOMBA_ACTION );
 	struct goomba_item *item_number = goomba_item_create( GOOMBA_INT );
 	struct goomba_item *item_enum = goomba_item_create( GOOMBA_ENUM );
+	struct goomba_item *item_submenu = goomba_item_create( GOOMBA_MENU );
 
 	int int_val = 0;
 	int enum_val = 1;
@@ -59,6 +61,8 @@ int main( int argc, char *argv[] ) {
 
 	item_exit->callback = quit_callback;
 	item_exit->text = "Exit";
+	
+	item_back->text = "Back";
 
 	item_number->text = "INT option";
 	item_number->int_data.max = 9;
@@ -70,11 +74,17 @@ int main( int argc, char *argv[] ) {
 	goomba_add_enum_option( item_enum, "LAST", 3 );
 	item_enum->enum_data.value = &enum_val;
 
+	item_submenu->text = "Sub Menu";
+	goomba_append_child( item_submenu, item_number );
+	goomba_append_child( item_submenu, item_back );
+
 	gui->root = goomba_item_create( GOOMBA_MENU );
 	gui->root->text = "Main Menu";
-	goomba_append_child( gui->root, item_number );
+
 	goomba_append_child( gui->root, item_enum );
+	goomba_append_child( gui->root, item_submenu );
 	goomba_append_child( gui->root, item_exit );
+	
 
 	goomba_gui_dump( gui );
 
