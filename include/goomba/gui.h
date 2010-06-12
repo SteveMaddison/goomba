@@ -14,7 +14,6 @@ struct goomba_gui *goomba_gui_create( void );
 void goomba_gui_free( struct goomba_gui *gui );
 
 int goomba_gui_start( struct goomba_gui *gui, SDL_Surface *s );
-
 void goomba_gui_dump( struct goomba_gui *gui );
 
 #endif

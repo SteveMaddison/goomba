@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <dirent.h>
 #include <goomba/item.h>
+#include <goomba/gui.h>
 
 struct goomba_item *goomba_item_create( goomba_item_type type ) {
 	struct goomba_item *item = malloc( sizeof(struct goomba_item) );
@@ -21,6 +25,7 @@ struct goomba_item *goomba_item_create( goomba_item_type type ) {
 				break;
 			case GOOMBA_ENUM:
 			case GOOMBA_STRING:
+			case GOOMBA_FILESEL:
 			case GOOMBA_FILE:
 			case GOOMBA_MENU:
 			case GOOMBA_ACTION:
@@ -67,9 +72,9 @@ void goomba_item_free( struct goomba_item *item ) {
 				item = NULL;
 				break;
 
-			case GOOMBA_FILE:
-				if( item->file_data.filters ) {
-					struct goomba_file_filter *p = item->file_data.filters;
+			case GOOMBA_FILESEL:
+				if( item->filesel_data.filters ) {
+					struct goomba_file_filter *p = item->filesel_data.filters;
 					struct goomba_file_filter *n = NULL;
 					while( p != NULL ) {
 						n = p->next;
@@ -97,13 +102,12 @@ void goomba_item_free( struct goomba_item *item ) {
 				break;
 
 			default:
-				fprintf( stderr, "Unknown goomba item type %d.\n", item->type );
 				break;
 		}
 	}
 }
 
-int goomba_append_child( struct goomba_item *parent, struct goomba_item *child ) {
+int goomba_item_append_child( struct goomba_item *parent, struct goomba_item *child ) {
 	switch( parent->type ) {
 		case GOOMBA_MENU:
 			if( parent->menu_data.items == NULL ) {
@@ -169,7 +173,6 @@ int goomba_add_enum_option( struct goomba_item *enum_item, char *name, int value
 	return 0;
 }
 
-
 void goomba_item_advance( struct goomba_item *item ) {
 	if( item ) {
 		switch( item->type ) {
@@ -233,16 +236,80 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 		switch( item->type ) {
 			case GOOMBA_STRING:
 				break;
-			case GOOMBA_FILE:
+			case GOOMBA_FILESEL: {
+				new_item = goomba_item_file_selector(
+					item->filesel_data.value,
+					item->filesel_data.size,
+					item->filesel_data.directory,
+					item );
+				}
+				break;
+			case GOOMBA_FILE: {
+				struct goomba_item *menu = item->parent;
+				struct goomba_item *p = menu->menu_data.items;
+				
+				if( item->file_data.dir ) {
+					char *dir = NULL;
+					
+					if( strcmp( item->text, ".." ) == 0 ) {
+						char *slash = strchr( menu->text, '/' );
+						if( slash ) {
+							*slash = 0;
+							dir = malloc( strlen(menu->text) + 1 );
+							strcpy( dir, menu->text );
+						}
+					}
+					else {					
+						if( strcmp( menu->text, "/" ) == 0 ) {
+							dir = malloc( strlen(item->text) + 2 );
+							sprintf( dir, "/%s", item->text );
+						}
+						else {
+							dir = malloc( strlen(menu->text) + strlen(item->text) + 2 );
+							sprintf( dir, "%s/%s", menu->text, item->text );
+						}
+					}
+			
+					new_item = goomba_item_file_selector(
+						menu->parent->filesel_data.value,
+						menu->parent->filesel_data.size,
+						dir,
+						menu->parent );
+					
+					free( dir );
+				}
+				else {
+					if( strcmp( menu->text, "/" ) == 0 ) {
+						snprintf( menu->parent->filesel_data.value, menu->parent->filesel_data.size,
+							"/%s", item->text );
+					}
+					else {
+						snprintf( menu->parent->filesel_data.value, menu->parent->filesel_data.size,
+							"%s/%s", menu->text, item->text );					
+					}
+					new_item = menu->parent->parent;
+				}
+				
+				/* Free the old menu, and all associated buffers. */
+				do {
+					free( p->text );
+					p = p->next;
+				} while( p != menu->menu_data.items );
+				free( menu->text );
+				goomba_item_free( menu );
+
+			}
 				break;
 			case GOOMBA_MENU:
 				switch( item->menu_data.selected->type ) {
 					case GOOMBA_MENU:
-						/* Nested menu: select the first option. */
+						/* Nested menu: select the first option and return new menu. */
 						item->menu_data.selected->menu_data.selected = item->menu_data.selected->menu_data.items;
-						return item->menu_data.selected;
+						new_item = item->menu_data.selected;
 						break;
 					case GOOMBA_ACTION:
+					case GOOMBA_FILESEL:
+					case GOOMBA_FILE:
 						new_item = goomba_item_select( item->menu_data.selected );
 						break;
 					default:
@@ -250,9 +317,6 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 				}
 				break;
 			case GOOMBA_ACTION:
-				if( item->callback && *item->callback ) {
-					item->callback();
-				}
 				if( item->action_data.action == GOOMBA_BACK ) {
 					new_item = item->parent;
 					if( new_item->type == GOOMBA_MENU ) {
@@ -262,8 +326,13 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 				break;
 			default:
 				break;
-		}	
+		}
 	}
+	
+	if( item->callback && *item->callback ) {
+		item->callback();
+	}
+	
 	return new_item;
 }
 
@@ -287,9 +356,9 @@ int goomba_item_child_count( struct goomba_item *item ) {
 				}
 				break;
 
-			case GOOMBA_FILE:
-				if( item->file_data.filters ) {
-					struct goomba_file_filter *p = item->file_data.filters;
+			case GOOMBA_FILESEL:
+				if( item->filesel_data.filters ) {
+					struct goomba_file_filter *p = item->filesel_data.filters;
 					while( p != NULL ) {
 						count++;
 						p = p->next;
@@ -314,6 +383,65 @@ int goomba_item_child_count( struct goomba_item *item ) {
 	}
 
 	return count;
+}
+
+struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *start, struct goomba_item *parent ) {
+	struct goomba_item *menu = NULL;
+	DIR *dir = NULL;
+	struct dirent *dentry;
+	char *dirname = start;
+	
+	if( dirname && *dirname ) {
+		dir = opendir( dirname );
+		if( !dir ) {
+			fprintf( stderr, "Couldn't open \"%s\" for goomba file selector: %s.\n", dirname, strerror( errno ) );
+		}
+	}
+
+	if( !dir ) {
+		dirname = "/";
+		dir = opendir( dirname );
+		if( !dir ) {
+			fprintf( stderr, "Couldn't open / for goomba file selector: %s.\n", strerror( errno ) );
+			return NULL;
+		}
+	}
+
+	menu = goomba_item_create( GOOMBA_MENU );
+	menu->parent = parent;
+	menu->text = malloc( strlen(dirname) + 1 );
+	if( menu->text == NULL ) {
+		fprintf( stderr, "Couldn't allocate buffer for directory name.\n" );
+		menu->text = "";
+	}
+	else {
+		strcpy( menu->text, dirname );
+	}
+	
+	while( (dentry = readdir( dir )) ) {
+		if( strcmp( dentry->d_name, "." ) != 0 ) {
+			struct goomba_item *item = goomba_item_create( GOOMBA_FILE );
+			char *buf = malloc( dentry->d_reclen );
+		
+			if( buf == NULL ) {
+				fprintf( stderr, "Couldn't allocate buffer for file name.\n" );
+				goomba_item_free( item );
+			}
+			else {
+				item->parent = menu;
+				strcpy( buf, dentry->d_name );
+				item->text = buf;
+				if( dentry->d_type == DT_DIR ) {
+					item->file_data.dir = 1;
+				}
+				goomba_item_append_child( menu, item );
+			}
+		}
+	}
+
+	closedir( dir );
+
+	return menu;
 }
 
 void goomba_item_dump( struct goomba_item *item ) {
@@ -362,11 +490,11 @@ void goomba_item_dump( struct goomba_item *item ) {
 					item->string_data.value ? item->string_data.value : "<NULL>" );
 				break;
 
-			case GOOMBA_FILE:
+			case GOOMBA_FILESEL:
 				printf( "(file) value=\"%s\"",
-					item->file_data.value ? item->file_data.value : "<NULL>" );
-				if( item->file_data.filters ) {
-					struct goomba_file_filter *p = item->file_data.filters;
+					item->filesel_data.value ? item->filesel_data.value : "<NULL>" );
+				if( item->filesel_data.filters ) {
+					struct goomba_file_filter *p = item->filesel_data.filters;
 					while( p != NULL ) {
 						printf( " [%s](\"%s\")",
 							p->pattern ? p->pattern : "<NULL>",

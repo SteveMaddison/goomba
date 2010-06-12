@@ -16,3 +16,6 @@ test: test.o $(LIB)
 test.o: src/test.c
 	gcc $(CFLAGS) -o test.o -c src/test.c
 
+clean:
+	rm -f $(LIB).so test test.o
+

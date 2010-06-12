@@ -5,6 +5,7 @@ typedef enum {
 	GOOMBA_INT,
 	GOOMBA_ENUM,
 	GOOMBA_STRING,
+	GOOMBA_FILESEL,
 	GOOMBA_FILE,
 	GOOMBA_MENU,
 	GOOMBA_ACTION
@@ -46,7 +47,13 @@ struct goomba_file_filter {
 };
 
 struct goomba_item_file {
+	int dir;
+};
+
+struct goomba_item_file_selector {
 	char *value;
+	int size;
+	char *directory;
 	struct goomba_file_filter *filters;
 };
 
@@ -70,6 +77,7 @@ struct goomba_item {
 		struct goomba_item_int int_data;
 		struct goomba_item_enum enum_data;
 		struct goomba_item_string string_data;
+		struct goomba_item_file_selector filesel_data;
 		struct goomba_item_file file_data;
 		struct goomba_item_menu menu_data;
 		struct goomba_item_action action_data;
@@ -78,12 +86,13 @@ struct goomba_item {
 
 struct goomba_item *goomba_item_create( goomba_item_type type );
 void goomba_item_free( struct goomba_item *item );
-int goomba_append_child( struct goomba_item *parent, struct goomba_item *child );
+int goomba_item_append_child( struct goomba_item *parent, struct goomba_item *child );
 int goomba_item_child_count( struct goomba_item *item );
 
 void goomba_item_advance( struct goomba_item *item );
 void goomba_item_retreat( struct goomba_item *item );
 struct goomba_item *goomba_item_select( struct goomba_item *item );
+struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *start, struct goomba_item *parent );
 
 #endif
 

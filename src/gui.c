@@ -15,6 +15,7 @@ static SDL_Surface *bg = NULL;
 
 static struct goomba_item *current_item = NULL;
 static int max_items = 1;
+static int file_selector = 0;
 
 static struct {
 	int height;
@@ -61,7 +62,7 @@ int goomba_gui_draw_text( char *text, int x, int y, goomba_align align ) {
 	
 	s = goomba_font_render( text );
 	if( s == NULL ) {
-		fprintf( stderr, "Couldn't render text \"%s\".\n", text ? text : "" );
+		return -1;
 	}
 
 	offset.y = y;
@@ -129,10 +130,17 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 					offset + bar.margin, GOOMBA_ALIGN_RIGHT );
 			}
 			break;
+		case GOOMBA_FILESEL:
+			goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
+			goomba_gui_draw_text( item->filesel_data.value && *item->filesel_data.value ? item->filesel_data.value : "...",
+					screen->w - bar.offset - bar.margin, offset + bar.margin, GOOMBA_ALIGN_RIGHT );
+			break;
 		case GOOMBA_FILE:
 			goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
-			goomba_gui_draw_text( "...", screen->w - bar.offset - bar.margin,
-					offset + bar.margin, GOOMBA_ALIGN_RIGHT );
+			if( item->file_data.dir ) {
+				goomba_gui_draw_text( "[DIR]", screen->w - bar.offset - bar.margin, offset + bar.margin,
+					GOOMBA_ALIGN_RIGHT );
+			}
 			break;
 		case GOOMBA_ACTION:
 			goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
