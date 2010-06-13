@@ -94,13 +94,15 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 			sub_items = goomba_item_child_count( item );
 			if( item->text && *item->text ) {
 				/* Hack to make space for the title. */
-				sub_items += 2;
+				sub_items ++;
 			}
+
 			if( sub_items > max_items ) {
-				/* Scrolling */
-				sub_items = max_items;
+				offset = (screen->h - (bar.height * max_items)) / 2;
 			}
-			offset = (screen->h - (bar.height * sub_items)) / 2;
+			else {
+				offset = (screen->h - (bar.height * sub_items)) / 2;
+			}
 		}
 		else {
 			offset = (screen->h - bar.height) / 2;
@@ -173,11 +175,36 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 
 						SDL_FreeSurface( s );
 						offset += bar.height;
-						count += 2;
+						count++;
 					}
 				}
 				if( item->menu_data.items ) {
-					struct goomba_item *p = item->menu_data.items;
+					struct goomba_item *p = item->menu_data.items;				
+					int selpos = 0;
+					
+					if( sub_items > max_items ) {
+						struct goomba_item *selected = item->menu_data.items;
+
+						do {
+							if( selected == item->menu_data.selected ) {
+								break;
+							}
+							selpos++;
+							selected = selected->next;
+						} while( selected != item->menu_data.items );
+		
+						if( item->text ) {
+							selpos += 2;
+						}
+						
+						while( selpos > max_items ) {
+							p = p->next;
+							selpos--;
+						}
+		
+						sub_items = max_items;
+					}				
+
 					do {
 						if( p == item->menu_data.selected ) {
 							goomba_gui_draw_bar( offset );
@@ -186,7 +213,7 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 						count++;
 						offset += bar.height;
 						p = p->next;
-					} while ( p != item->menu_data.items && count <= max_items );
+					} while ( p != item->menu_data.items && count < max_items );
 				}
 			break;
 		}
@@ -331,7 +358,7 @@ int goomba_gui_start( struct goomba_gui *gui, SDL_Surface *s ) {
 	bar.height = (gui->config.font.size * 100) / 80;
 	bar.margin = (bar.height - gui->config.font.size) / 2;
 	bar.offset = (screen->w - bar.width) / 2;
-	max_items = (screen->h / bar.height) - 1;
+	max_items = (screen->h / bar.height) - 2;
 	if( max_items < 1 ) max_items = 1;
 	
 	/* Surface used for the menu selection bar. */

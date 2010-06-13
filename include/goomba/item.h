@@ -87,12 +87,15 @@ struct goomba_item {
 struct goomba_item *goomba_item_create( goomba_item_type type );
 void goomba_item_free( struct goomba_item *item );
 int goomba_item_append_child( struct goomba_item *parent, struct goomba_item *child );
+int goomba_item_add_child_sorted( struct goomba_item *parent, struct goomba_item *child );
 int goomba_item_child_count( struct goomba_item *item );
 
 void goomba_item_advance( struct goomba_item *item );
 void goomba_item_retreat( struct goomba_item *item );
 struct goomba_item *goomba_item_select( struct goomba_item *item );
 struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *start, struct goomba_item *parent );
+
+void goomba_item_dump( struct goomba_item *item );
 
 #endif
 

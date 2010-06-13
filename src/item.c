@@ -135,6 +135,56 @@ int goomba_item_append_child( struct goomba_item *parent, struct goomba_item *ch
 	return 0;
 }
 
+int goomba_item_add_child_sorted( struct goomba_item *parent, struct goomba_item *child ) {
+	switch( parent->type ) {
+		case GOOMBA_MENU:
+			if( parent->menu_data.items == NULL ) {
+				parent->menu_data.items = child; 
+				child->next = child;
+				child->prev = child;
+				parent->menu_data.selected = child;
+			}
+			else {
+				struct goomba_item *after = parent->menu_data.items->prev;
+				struct goomba_item *before = NULL;
+				
+				printf("Add: %s\n", child->text );
+				printf("  check: %s,%s = %d\n", after->text, child->text, strcmp( after->text, child->text ) );
+				while( strcmp( after->text, child->text ) > 0 ) {
+					after = after->prev;
+					if( after == parent->menu_data.items->prev ) {
+						printf("  *break*\n" );
+						break;
+					}
+					printf("  check: %s,%s = %d\n", after->text, child->text, strcmp( after->text, child->text ) );
+				}
+				printf("  After: %s\n", after->text );
+				
+				before = after->next;
+				child->next = before;
+				child->prev = after;
+				after->next = child;
+				before->prev = child;
+				
+				if( strcmp( after->text, child->text ) > 0 ) {
+					parent->menu_data.items = child;
+					parent->menu_data.selected = child;
+					printf("  New head: %s\n", child->text );
+				}
+				
+				goomba_item_dump( parent );
+			}
+			child->parent = parent;
+			break;
+		default:
+			fprintf( stderr, "Can't add child to goomba item type %d.\n", parent->type );
+			return -1;
+			break;
+	}
+	
+	return 0;
+}
+
 int goomba_add_enum_option( struct goomba_item *enum_item, char *name, int value ) {
 	if( enum_item->type != GOOMBA_ENUM ) {
 		fprintf( stderr, "Can't add enum value to non-enum goomba item!\n" );
@@ -188,7 +238,9 @@ void goomba_item_advance( struct goomba_item *item ) {
 				break;
 			
 			case GOOMBA_MENU:
-				item->menu_data.selected = item->menu_data.selected->next;
+				if( item->menu_data.selected != item->menu_data.items->prev ) {
+					item->menu_data.selected = item->menu_data.selected->next;
+				}
 				break;
 
 			default:
@@ -216,7 +268,9 @@ void goomba_item_retreat( struct goomba_item *item ) {
 				break;
 			
 			case GOOMBA_MENU:
-				item->menu_data.selected = item->menu_data.selected->prev;
+				if( item->menu_data.selected != item->menu_data.items ) {
+					item->menu_data.selected = item->menu_data.selected->prev;
+				}
 				break;
 
 			default:
@@ -237,10 +291,18 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 			case GOOMBA_STRING:
 				break;
 			case GOOMBA_FILESEL: {
+				char *dir = item->filesel_data.directory;
+				if( item->filesel_data.value && *item->filesel_data.value ) {
+					char *slash = strrchr( item->filesel_data.value, '/' );
+					if( slash ) {
+						*slash = 0;
+					}
+					dir = item->filesel_data.value;
+				}
 				new_item = goomba_item_file_selector(
 					item->filesel_data.value,
 					item->filesel_data.size,
-					item->filesel_data.directory,
+					dir,
 					item );
 				}
 				break;
@@ -451,7 +513,7 @@ struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *sta
 						free( tmp );
 					}
 				}
-				goomba_item_append_child( menu, item );
+				goomba_item_add_child_sorted( menu, item );
 			}
 		}
 	}
@@ -505,6 +567,12 @@ void goomba_item_dump( struct goomba_item *item ) {
 				printf( "(string) size=%d value=\"%s\"\n", 
 					item->string_data.size,
 					item->string_data.value ? item->string_data.value : "<NULL>" );
+				break;
+
+			case GOOMBA_FILE:
+				printf( "(file) text=\"%s\" dir=%d\n", 
+					item->text ? item->text : "<NULL>",
+					item->file_data.dir );
 				break;
 
 			case GOOMBA_FILESEL:
