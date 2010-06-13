@@ -89,6 +89,7 @@ void goomba_item_free( struct goomba_item *item );
 int goomba_item_append_child( struct goomba_item *parent, struct goomba_item *child );
 int goomba_item_add_child_sorted( struct goomba_item *parent, struct goomba_item *child );
 int goomba_item_child_count( struct goomba_item *item );
+int goomba_add_enum_option( struct goomba_item *enum_item, char *name, int value );
 
 void goomba_item_advance( struct goomba_item *item );
 void goomba_item_retreat( struct goomba_item *item );

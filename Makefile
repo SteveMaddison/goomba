@@ -1,21 +1,24 @@
-CFLAGS = -I./include -fPIC -g
+CC = gcc
+LD = gcc
 LIB = goomba
 
-SRCS = src/config.c src/font.c src/gui.c src/item.c
+CFLAGS = -Wall -I./include -I/opt/local/include -fPIC -g
+LDFLAGS = -L/opt/local/lib -lSDL -lSDL_ttf
+LIBNAME = lib$(LIB)
 
-all: test
+OBJS = src/config.o src/font.o src/gui.o src/item.o
 
-$(LIB): $(LIB).so
+all: $(LIBNAME).so test
 
-$(LIB).so: $(SRCS)
-	gcc $(CFLAGS) -o $(LIB).so -shared $(SRCS)
+$(LIBNAME).so: $(OBJS)
+	$(LD) -o $(LIBNAME).so -shared $(LDFLAGS) $(OBJS)
 
-test: test.o $(LIB)
-	gcc -o test test.o $(LIB).so -lSDL -lSDL_ttf
+test: src/test.o $(LIBNAME).so
+	$(LD) -o test src/test.o $(LDFLAGS) -L. -l$(LIB)
 
-test.o: src/test.c
-	gcc $(CFLAGS) -o test.o -c src/test.c
+.c.o: %.c
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
-	rm -f $(LIB).so test test.o
+	rm -f $(LIBNAME).so *.o src/*.o test
 

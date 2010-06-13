@@ -16,6 +16,7 @@ int quit = 0;
 
 int quit_callback( void ) {
 	quit = 1;
+	return 0;
 }
 
 int sdl_init( void ) {
@@ -46,6 +47,8 @@ int sdl_init( void ) {
 
 	SDL_BlitSurface( optimized, NULL, screen, &offset ); 
 	SDL_Flip( screen );
+
+	return 0;
 }
 
 int main( int argc, char *argv[] ) {

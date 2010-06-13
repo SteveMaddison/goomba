@@ -15,7 +15,6 @@ static SDL_Surface *bg = NULL;
 
 static struct goomba_item *current_item = NULL;
 static int max_items = 1;
-static int file_selector = 0;
 
 static struct {
 	int height;
@@ -220,16 +219,16 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 		default:
 			break;
 	}
+	return 0;
 }
 
 int goomba_gui_draw( void ) {
-	SDL_Rect offset;
-
 	/* Blit the background. */
 	SDL_BlitSurface( bg, NULL, screen, NULL );
 	goomba_gui_draw_item( current_item, -1, 0 );
 		
 	SDL_Flip( screen );
+	return 0;
 }
 
 void goomba_gui_event_flush( void ) {
