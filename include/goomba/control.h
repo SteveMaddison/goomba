@@ -27,9 +27,9 @@ typedef enum {
 } goomba_direction_t;
 
 struct goomba_control {
-	goomba_device_t device;
+	goomba_device_t device_type;
 	int device_id;
-	goomba_control_t control;
+	goomba_control_t control_type;
 	int control_id;
 	int value;
 };

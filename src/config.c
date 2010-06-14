@@ -17,7 +17,7 @@ int goomba_config_init( struct goomba_config *config ) {
 	config->selector.alpha    = 128;
 
 	for( i = 0; i < GOOMBA_EVENTS ; i++ ) {
-		config->control[i].device = GOOMBA_DEV_KEYBOARD;
+		config->control[i].device_type = GOOMBA_DEV_KEYBOARD;
 	}
 	config->control[GOOMBA_UP].value     = SDLK_UP;
 	config->control[GOOMBA_DOWN].value   = SDLK_DOWN;

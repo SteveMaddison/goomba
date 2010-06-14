@@ -280,6 +280,21 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 		switch( item->type ) {
 			case GOOMBA_STRING:
 				break;
+			case GOOMBA_CONTROL: {
+				int original = item->control_data.control->device_type;
+				
+				item->control_data.control->device_type = -1;
+				goomba_gui_draw();
+				
+				if( goomba_gui_capture_control( item->control_data.control ) != 0 ) {
+					item->control_data.control->device_type = original;
+				}
+				
+				if( item->parent && item->parent->type == GOOMBA_MENU ) {
+					new_item = item->parent;
+				}
+				}
+				break;
 			case GOOMBA_FILESEL: {
 				char *dir = item->filesel_data.directory;
 				if( item->filesel_data.value && *item->filesel_data.value ) {
@@ -349,7 +364,6 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 				} while( p != menu->menu_data.items );
 				free( menu->text );
 				goomba_item_free( menu );
-
 			}
 				break;
 			case GOOMBA_MENU:
@@ -359,6 +373,7 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 						item->menu_data.selected->menu_data.selected = item->menu_data.selected->menu_data.items;
 						new_item = item->menu_data.selected;
 						break;
+					case GOOMBA_CONTROL:
 					case GOOMBA_ACTION:
 					case GOOMBA_FILESEL:
 					case GOOMBA_FILE:

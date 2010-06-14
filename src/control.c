@@ -56,8 +56,10 @@ const char *goomba_axis_dir_name( int axis_dir ) {
 }
 
 int goomba_control_string( char *buf, int size, struct goomba_control *control ) {
+	*buf = 0;
+
 	if( control ) {
-		switch( control->device ) {
+		switch( control->device_type ) {
 			case GOOMBA_DEV_KEYBOARD:
 				strncpy( buf, goomba_key_name( control->value ), size );
 				return 0;

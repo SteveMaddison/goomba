@@ -65,6 +65,7 @@ int main( int argc, char *argv[] ) {
 	struct goomba_item *item_string = goomba_item_create( GOOMBA_STRING );
 	struct goomba_item *item_ctrl = goomba_item_create( GOOMBA_CONTROL );
 	struct goomba_item *item_file = goomba_item_create( GOOMBA_FILESEL );
+	struct goomba_control control;
 
 	int int_val = 0;
 	int enum_val = 1;
@@ -100,8 +101,9 @@ int main( int argc, char *argv[] ) {
 	item_string->string_data.size = STRING_LEN;
 
 	item_ctrl->text = "A control";
-	item_ctrl->control_data.device = GOOMBA_DEV_KEYBOARD;
-	item_ctrl->control_data.value = SDLK_PAGEUP;
+	control.device_type = GOOMBA_DEV_KEYBOARD;
+	control.value = SDLK_PAGEUP;
+	item_ctrl->control_data.control = &control;
 
 	item_file->text = "File name";
 	item_file->filesel_data.value = &file[0];

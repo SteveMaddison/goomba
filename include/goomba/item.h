@@ -43,6 +43,10 @@ struct goomba_item_string {
 	int size;
 };
 
+struct goomba_item_control {
+	struct goomba_control *control;
+};
+
 struct goomba_file_filter {
 	struct goomba_file_filter *next;
 	char *pattern;
@@ -80,7 +84,7 @@ struct goomba_item {
 		struct goomba_item_int int_data;
 		struct goomba_item_enum enum_data;
 		struct goomba_item_string string_data;
-		struct goomba_control control_data;
+		struct goomba_item_control control_data;
 		struct goomba_item_file_selector filesel_data;
 		struct goomba_item_file file_data;
 		struct goomba_item_menu menu_data;

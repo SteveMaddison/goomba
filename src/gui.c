@@ -10,6 +10,10 @@ typedef enum {
 	GOOMBA_ALIGN_RIGHT
 } goomba_align_t;
 
+static const int AXIS_THRESHOLD = 8000;
+static const int BALL_THRESHOLD = 10;
+static const int MOUSE_THRESHOLD = 10;
+
 static SDL_Surface *screen = NULL;
 static SDL_Surface *bg_original = NULL;
 static SDL_Surface *bg = NULL;
@@ -43,6 +47,26 @@ void goomba_gui_free( struct goomba_gui *gui ) {
 	goomba_item_free( gui->root );
 	free( gui );
 	gui = NULL;	
+}
+
+int goomba_gui_hat_dir_value( int direction ) {
+	switch( direction ) {
+		case SDL_HAT_UP:
+			return GOOMBA_DIR_UP;
+			break;
+		case SDL_HAT_DOWN:
+			return GOOMBA_DIR_DOWN;
+			break;
+		case SDL_HAT_LEFT:
+			return GOOMBA_DIR_LEFT;
+			break;
+		case SDL_HAT_RIGHT:
+			return GOOMBA_DIR_RIGHT;
+			break;
+		default:
+			break;
+	}
+	return 0;
 }
 
 int goomba_gui_draw_bar( int y ) {
@@ -136,7 +160,7 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 		case GOOMBA_CONTROL: {
 				char name[32];
 				goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
-				if( goomba_control_string( name, 32, &item->control_data ) == 0 ) {
+				if( goomba_control_string( name, 32, item->control_data.control ) == 0 ) {
 					goomba_gui_draw_text( name, screen->w - bar.offset - bar.margin,
 					offset + bar.margin, GOOMBA_ALIGN_RIGHT );
 				}
@@ -246,6 +270,91 @@ void goomba_gui_event_flush( void ) {
 	while( SDL_PollEvent( &sdl_event ) );
 }
 
+int goomba_gui_capture_control( struct goomba_control *control ) {
+	int timeout = 5000; /* Five seconds */
+	SDL_Event sdl_event;
+
+	goomba_gui_event_flush();
+
+	while( timeout > 0 ) {
+		SDL_PollEvent( &sdl_event );
+		switch( sdl_event.type ) {
+			case SDL_KEYDOWN:
+				control->device_type = GOOMBA_DEV_KEYBOARD;
+				control->device_id = sdl_event.key.which;
+				control->value = sdl_event.key.keysym.sym;
+				return 0;
+			case SDL_JOYAXISMOTION:
+				control->device_type = GOOMBA_DEV_JOYSTICK;
+				control->device_id = sdl_event.jaxis.which;
+				control->control_type = GOOMBA_CTRL_AXIS;
+				control->control_id = sdl_event.jaxis.axis;
+				if( sdl_event.jaxis.value > AXIS_THRESHOLD )
+					control->value = 1;
+				else if( sdl_event.jaxis.value < -AXIS_THRESHOLD )
+					control->value = -1;
+				else
+					return -1;
+				return 0;
+			case SDL_JOYBUTTONDOWN:
+				control->device_type = GOOMBA_DEV_JOYSTICK;
+				control->device_id = sdl_event.jbutton.which;
+				control->control_type = GOOMBA_CTRL_BUTTON;
+				control->value = sdl_event.jbutton.button;
+				break;
+			case SDL_JOYHATMOTION:
+				control->device_type = GOOMBA_DEV_JOYSTICK;
+				control->device_id = sdl_event.jhat.which;
+				control->control_type = GOOMBA_CTRL_HAT;
+				control->control_id = sdl_event.jhat.hat;
+				control->value = goomba_gui_hat_dir_value( sdl_event.jhat.value );
+				return 0;
+			case SDL_JOYBALLMOTION:
+				control->device_type = GOOMBA_DEV_JOYSTICK;
+				control->device_id = sdl_event.jball.which;
+				control->control_type = GOOMBA_CTRL_BALL;
+				control->control_id = sdl_event.jball.ball;
+				if( sdl_event.jball.xrel > BALL_THRESHOLD )
+					control->value = GOOMBA_DIR_LEFT;
+				else if(  sdl_event.jball.xrel < -BALL_THRESHOLD )
+					control->value = GOOMBA_DIR_RIGHT;
+				else if( sdl_event.jball.yrel > BALL_THRESHOLD )
+					control->value = GOOMBA_DIR_DOWN;
+				else if(  sdl_event.jball.yrel < -BALL_THRESHOLD )
+					control->value = GOOMBA_DIR_UP;
+				else
+					return -1;
+				return 0;
+			case SDL_MOUSEBUTTONDOWN:
+				control->device_type = GOOMBA_DEV_MOUSE;
+				control->device_id = sdl_event.button.which;
+				control->control_type = GOOMBA_CTRL_BUTTON;
+				control->value = sdl_event.button.button;
+				return 0;
+			case SDL_MOUSEMOTION:
+				control->device_type = GOOMBA_DEV_MOUSE;
+				control->device_id = sdl_event.motion.which;
+				control->control_type = GOOMBA_CTRL_AXIS;
+				if( sdl_event.motion.xrel > MOUSE_THRESHOLD )
+					control->value = GOOMBA_DIR_LEFT;
+				else if(  sdl_event.motion.xrel < -MOUSE_THRESHOLD )
+					control->value = GOOMBA_DIR_RIGHT;
+				else if( sdl_event.motion.yrel > MOUSE_THRESHOLD )
+					control->value = GOOMBA_DIR_DOWN;
+				else if(  sdl_event.motion.yrel < -MOUSE_THRESHOLD )
+					control->value = GOOMBA_DIR_UP;
+				else
+					return -1;
+				return 0;
+			default:
+				break;
+		}
+		SDL_Delay( 10 );
+		timeout -= 10;
+	}
+	return -1;
+}
+
 void goomba_gui_event_loop( struct goomba_config *config ) {
 	SDL_Event sdl_event;
 	goomba_event_t event = -1;
@@ -261,7 +370,7 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 			else {
 				for( i = 0 ; i < GOOMBA_EVENTS ; i++ ) {
 					if( sdl_event.type == SDL_KEYDOWN
-					&& config->control[i].device == GOOMBA_DEV_KEYBOARD
+					&& config->control[i].device_type == GOOMBA_DEV_KEYBOARD
 					&& sdl_event.key.keysym.sym == config->control[i].value ) {
 						event = i;
 					}
