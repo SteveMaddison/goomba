@@ -10,7 +10,7 @@ typedef enum {
 	GOOMBA_ALIGN_RIGHT
 } goomba_align_t;
 
-static const int AXIS_THRESHOLD = 8000;
+static const int AXIS_THRESHOLD = 16000;
 static const int BALL_THRESHOLD = 10;
 static const int MOUSE_THRESHOLD = 10;
 

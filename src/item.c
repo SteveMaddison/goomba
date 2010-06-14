@@ -282,18 +282,20 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 				break;
 			case GOOMBA_CONTROL: {
 				int original = item->control_data.control->device_type;
-				
-				item->control_data.control->device_type = -1;
+
+				/* Redraw item/menu with empty value. */
+				item->control_data.control->device_type = GOOMBA_DEV_UNKNOWN;
 				goomba_gui_draw();
 				
 				if( goomba_gui_capture_control( item->control_data.control ) != 0 ) {
+					/* Error or timeout: restore original control. */
 					item->control_data.control->device_type = original;
 				}
 				
 				if( item->parent && item->parent->type == GOOMBA_MENU ) {
 					new_item = item->parent;
 				}
-				}
+			}
 				break;
 			case GOOMBA_FILESEL: {
 				char *dir = item->filesel_data.directory;

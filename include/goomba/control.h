@@ -2,6 +2,7 @@
 #define _CONTROL_H_ 1
 
 typedef enum {
+	GOOMBA_DEV_UNKNOWN,
 	GOOMBA_DEV_KEYBOARD,
 	GOOMBA_DEV_JOYSTICK,
 	GOOMBA_DEV_MOUSE,
@@ -34,11 +35,7 @@ struct goomba_control {
 	int value;
 };
 
-const char *goomba_device_name( goomba_device_t device );
-const char *goomba_control_name( goomba_control_t control );
-const char *goomba_direction_name( goomba_direction_t dir );
 int goomba_control_string( char *buf, int size, struct goomba_control *control );
-const char *goomba_axis_dir_name( int axis_dir );
 
 #endif
 

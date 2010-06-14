@@ -3,56 +3,15 @@
 #include <goomba/key.h>
 #include <goomba/control.h>
 
-static const char *device_str[]	= {
-	"Unknown",
-	"Key",
-	"joy",
-	"Mouse"
-};
-static const char *ctrl_str[] = {
-	"Unknown",
-	"Button",
-	"Axis",
-	"Hat",
-	"Ball"
-};
-static const char *dir_str[] = {
-	"Unknown",
-	"Up",
-	"Down",
-	"Left",
-	"Right"
-};
-static const char *axis_dir_plus = "+";
-static const char *axis_dir_minus = "-";
-
-const char *goomba_device_name( goomba_device_t device ) {
-	if( device < 0 || device > GOOMBA_DEVS )
-		return NULL;
-	else
-		return device_str[device];
-}
-
-const char *goomba_control_name( goomba_control_t control ) {
-	if( control < 0 || control > GOOMBA_CTRLS )
-		return NULL;
-	else
-		return ctrl_str[control];
-}
-
-const char *goomba_direction_name( goomba_direction_t dir ) {
-	if( dir < 0 || dir > GOOMBA_DIRS )
-		return NULL;
-	else
-		return dir_str[dir];
-}
-
-const char *goomba_axis_dir_name( int axis_dir ) {
-	if( axis_dir < 0 )
-		return axis_dir_minus;
-	else if ( axis_dir > 0 )
-		return axis_dir_plus;
-	return NULL;
+const char *goomba_control_dir( goomba_direction_t dir ) {
+	switch( dir ) {
+		case GOOMBA_DIR_UP:    return "Up";
+		case GOOMBA_DIR_DOWN:  return "Down";
+		case GOOMBA_DIR_LEFT:  return "Left";
+		case GOOMBA_DIR_RIGHT: return "Right";
+		default: break;
+	}
+	return "";
 }
 
 int goomba_control_string( char *buf, int size, struct goomba_control *control ) {
@@ -65,10 +24,38 @@ int goomba_control_string( char *buf, int size, struct goomba_control *control )
 				return 0;
 				break;
 			case GOOMBA_DEV_JOYSTICK:
-				
+				switch ( control->control_type ) {
+					case GOOMBA_CTRL_BUTTON:
+						snprintf( buf, size, "Joy(%d) Button %d", control->device_id, control->value );
+						break;
+					case GOOMBA_CTRL_AXIS:
+						snprintf( buf, size, "Joy(%d) Axis(%d) %c", control->device_id, control->control_id,
+							(control->value < 0) ? '-' : '+' );
+						break;
+					case GOOMBA_CTRL_HAT:
+						snprintf( buf, size, "Joy(%d) Hat(%d) %s", control->device_id, control->control_id,
+							goomba_control_dir( control->value ) );
+						break;
+					case GOOMBA_CTRL_BALL:
+						snprintf( buf, size, "Joy(%d) Ball(%d) %s", control->device_id, control->control_id,
+							goomba_control_dir( control->value ) );
+						break;
+					default:
+						break;
+				}
 				break;
 			case GOOMBA_DEV_MOUSE:
-				
+				switch ( control->control_type ) {
+					case GOOMBA_CTRL_BUTTON:
+						snprintf( buf, size, "Mouse(%d) Button %d", control->device_id, control->value );
+						break;
+					case GOOMBA_CTRL_AXIS:
+						snprintf( buf, size, "Mouse(%d) Axis(%d) %c", control->device_id, control->control_id,
+							(control->value < 0) ? '-' : '+' );
+						break;	
+					default:
+						break;
+				}
 				break;
 			default:
 				break;
