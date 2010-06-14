@@ -80,32 +80,66 @@ int goomba_gui_draw_bar( int y ) {
 	return 0;
 }
 
-int goomba_gui_draw_text( char *text, int x, int y, goomba_align_t align ) {
-	SDL_Surface *s = NULL;
+int goomba_gui_draw_text( char *text_left, char *text_right, int y ) {
+	SDL_Surface *sl = NULL;
+	SDL_Surface *sr = NULL;
+	SDL_Surface *dots = NULL;
 	SDL_Rect offset;
+	int end;
 	
-	s = goomba_font_render( text );
-	if( s == NULL ) {
-		return -1;
-	}
+	sl = goomba_font_render( text_left );
+	sr = goomba_font_render( text_right );
 
 	offset.y = y;
-	if( align == GOOMBA_ALIGN_LEFT ) {
-		offset.x = x;
+	if( sl ) {
+		offset.x = bar.offset + bar.margin;
+		SDL_BlitSurface( sl, NULL, screen, &offset );
+		SDL_FreeSurface( sl );
 	}
-	else {
-		offset.x = x - s->w;
+	if( sr ) {
+		SDL_Rect chop;
+		chop.x = 0;
+		chop.y = 0;
+		chop.w = sr->w;
+		chop.h = sr->h;
+
+		/* Check if we need to truncate the value text. */
+		if( sl ) {
+			end = bar.offset + sl->w + (bar.margin * 3);
+		} else {
+			end = bar.offset + bar.margin;
+		}
+
+		offset.x = screen->w - bar.offset - bar.margin - sr->w;			
+		if( offset.x < end ) {
+			dots = goomba_font_render( "..." );
+			if( dots ) {
+				chop.x = (end - offset.x);
+				offset.x += (end - offset.x);
+
+				SDL_BlitSurface( dots, NULL, screen, &offset );
+
+				chop.x += dots->w;
+				chop.w -= chop.x;
+				
+				offset.x += dots->w;
+			}
+		}
+
+		SDL_BlitSurface( sr, &chop, screen, &offset );
+		SDL_FreeSurface( sr );
+		if( dots ) {
+			SDL_FreeSurface( dots );
+		}
 	}
-	
-	SDL_BlitSurface( s, NULL, screen, &offset );
-	SDL_FreeSurface( s );
-	
+
 	return 0;
 }
 
 int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 	int sub_items = 0;
 	int offset = y;
+	char tmp[32] = "";
 
 	if( item == NULL ) {
 		fprintf( stderr, "Attempt to draw NULL goomba_gui object.\n" );
@@ -135,56 +169,35 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 
 	switch( item->type ) {
 		case GOOMBA_INT:
-			goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
 			if( item->int_data.value ) {
-				char tmp[32];
 				snprintf( tmp, 32, "%d", *item->int_data.value );
-				goomba_gui_draw_text( tmp, screen->w - bar.offset - bar.margin,
-					offset + bar.margin, GOOMBA_ALIGN_RIGHT );
 			}
+			goomba_gui_draw_text( item->text, tmp, offset + bar.margin );
 			break;
 		case GOOMBA_ENUM:
-			goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
-			if( item->enum_data.selected && item->enum_data.selected->name ) {
-				goomba_gui_draw_text( item->enum_data.selected->name, screen->w - bar.offset - bar.margin,
-					offset + bar.margin, GOOMBA_ALIGN_RIGHT );
-			}
+			goomba_gui_draw_text( item->text, item->enum_data.selected->name, offset + bar.margin );
 			break;
 		case GOOMBA_STRING:
-			goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
-			if( item->string_data.value && item->string_data.value ) {
-				goomba_gui_draw_text( item->string_data.value, screen->w - bar.offset - bar.margin,
-					offset + bar.margin, GOOMBA_ALIGN_RIGHT );
-			}
+			goomba_gui_draw_text( item->text, item->string_data.value, offset + bar.margin );
 			break;
-		case GOOMBA_CONTROL: {
-				char name[32];
-				goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
-				if( goomba_control_string( name, 32, item->control_data.control ) == 0 ) {
-					goomba_gui_draw_text( name, screen->w - bar.offset - bar.margin,
-					offset + bar.margin, GOOMBA_ALIGN_RIGHT );
-				}
-			}
+		case GOOMBA_CONTROL:
+			goomba_control_string( tmp, 32, item->control_data.control );
+			goomba_gui_draw_text( item->text, tmp, offset + bar.margin );
 			break;
 		case GOOMBA_FILESEL:
-			goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
-			goomba_gui_draw_text( item->filesel_data.value && *item->filesel_data.value ? item->filesel_data.value : "...",
-					screen->w - bar.offset - bar.margin, offset + bar.margin, GOOMBA_ALIGN_RIGHT );
+			goomba_gui_draw_text( item->text,
+				(item->filesel_data.value && *item->filesel_data.value) ? item->filesel_data.value : "...",
+				offset + bar.margin );
 			break;
 		case GOOMBA_FILE:
-			goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
-			if( item->file_data.dir ) {
-				goomba_gui_draw_text( "[DIR]", screen->w - bar.offset - bar.margin, offset + bar.margin,
-					GOOMBA_ALIGN_RIGHT );
-			}
+			goomba_gui_draw_text( item->text, item->file_data.dir ? "[DIR]" : NULL, offset + bar.margin );
 			break;
 		case GOOMBA_ACTION:
-			goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
+			goomba_gui_draw_text( item->text, NULL, offset + bar.margin );
 			break;
 		case GOOMBA_MENU: 
 			if( stop ) {
-				goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin,
-					GOOMBA_ALIGN_LEFT );
+				goomba_gui_draw_text( item->text, NULL, offset + bar.margin );
 			}
 			else {
 				int count = 0;

@@ -6,7 +6,7 @@
 #define SCREEN_X 800
 #define SCREEN_Y 480
 #define SCREEN_BPP 32
-#define STRING_LEN 20
+#define STRING_LEN 128
 #define FILE_LEN 128
 
 SDL_Surface *screen = NULL;
@@ -99,6 +99,7 @@ int main( int argc, char *argv[] ) {
 	item_string->text = "Some string";
 	item_string->string_data.value = &buffer[0];
 	item_string->string_data.size = STRING_LEN;
+	strcpy( buffer, "0123456789012345678901234567890123456789" );
 
 	item_ctrl->text = "A control";
 	control.device_type = GOOMBA_DEV_KEYBOARD;
