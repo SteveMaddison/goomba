@@ -101,6 +101,7 @@ int main( int argc, char *argv[] ) {
 
 	item_ctrl->text = "A control";
 	item_ctrl->control_data.device = GOOMBA_DEV_KEYBOARD;
+	item_ctrl->control_data.value = SDLK_PAGEUP;
 
 	item_file->text = "File name";
 	item_file->filesel_data.value = &file[0];

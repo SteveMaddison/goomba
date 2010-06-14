@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <goomba/key.h>
 #include <goomba/control.h>
 
 static const char *device_str[]	= {
@@ -58,7 +59,7 @@ int goomba_control_string( char *buf, int size, struct goomba_control *control )
 	if( control ) {
 		switch( control->device ) {
 			case GOOMBA_DEV_KEYBOARD:
-				
+				strncpy( buf, goomba_key_name( control->value ), size );
 				return 0;
 				break;
 			case GOOMBA_DEV_JOYSTICK:
