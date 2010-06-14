@@ -37,10 +37,13 @@ int sdl_init( void ) {
 	}
 
 	loaded = SDL_LoadBMP( "test.bmp" );
-	if( loaded != NULL ) {
-		optimized = SDL_DisplayFormat( loaded );
-		SDL_FreeSurface( loaded );
+	if( loaded == NULL ) {
+		fprintf(stderr, "Couldn't load test image: %s\n", SDL_GetError());
+		return -1;
 	}
+
+	optimized = SDL_DisplayFormat( loaded );
+	SDL_FreeSurface( loaded );
 
 	offset.x = (SCREEN_X - optimized->w) / 2;
 	offset.y = (SCREEN_Y - optimized->h) / 2;
