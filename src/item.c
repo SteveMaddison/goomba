@@ -576,6 +576,13 @@ void goomba_item_dump( struct goomba_item *item ) {
 					item->string_data.value ? item->string_data.value : "<NULL>" );
 				break;
 
+			case GOOMBA_CONTROL: {
+				char tmp[32];
+				goomba_control_string( tmp, 32, item->control_data.control );
+				printf( "(control) control=\"%s\"\n", tmp );
+			}
+				break;
+
 			case GOOMBA_FILE:
 				printf( "(file) text=\"%s\" dir=%d\n", 
 					item->text ? item->text : "<NULL>",
