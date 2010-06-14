@@ -148,17 +148,12 @@ int goomba_item_add_child_sorted( struct goomba_item *parent, struct goomba_item
 				struct goomba_item *after = parent->menu_data.items->prev;
 				struct goomba_item *before = NULL;
 				
-				printf("Add: %s\n", child->text );
-				printf("  check: %s,%s = %d\n", after->text, child->text, strcmp( after->text, child->text ) );
 				while( strcmp( after->text, child->text ) > 0 ) {
 					after = after->prev;
 					if( after == parent->menu_data.items->prev ) {
-						printf("  *break*\n" );
 						break;
 					}
-					printf("  check: %s,%s = %d\n", after->text, child->text, strcmp( after->text, child->text ) );
 				}
-				printf("  After: %s\n", after->text );
 				
 				before = after->next;
 				child->next = before;
@@ -169,10 +164,7 @@ int goomba_item_add_child_sorted( struct goomba_item *parent, struct goomba_item
 				if( strcmp( after->text, child->text ) > 0 ) {
 					parent->menu_data.items = child;
 					parent->menu_data.selected = child;
-					printf("  New head: %s\n", child->text );
 				}
-				
-				goomba_item_dump( parent );
 			}
 			child->parent = parent;
 			break;
@@ -238,9 +230,7 @@ void goomba_item_advance( struct goomba_item *item ) {
 				break;
 			
 			case GOOMBA_MENU:
-				if( item->menu_data.selected != item->menu_data.items->prev ) {
-					item->menu_data.selected = item->menu_data.selected->next;
-				}
+				item->menu_data.selected = item->menu_data.selected->next;
 				break;
 
 			default:
@@ -268,9 +258,7 @@ void goomba_item_retreat( struct goomba_item *item ) {
 				break;
 			
 			case GOOMBA_MENU:
-				if( item->menu_data.selected != item->menu_data.items ) {
-					item->menu_data.selected = item->menu_data.selected->prev;
-				}
+				item->menu_data.selected = item->menu_data.selected->prev;
 				break;
 
 			default:
