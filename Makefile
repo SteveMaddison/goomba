@@ -6,7 +6,7 @@ CFLAGS = -Wall -I./include -I/opt/local/include -fPIC -g
 LDFLAGS = -L/opt/local/lib -lSDL -lSDL_ttf
 LIBNAME = lib$(LIB)
 
-OBJS = src/config.o src/font.o src/gui.o src/item.o
+OBJS = src/config.o src/control.o src/font.o src/gui.o src/item.o src/key.o
 
 all: $(LIBNAME).so test
 

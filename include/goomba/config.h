@@ -1,10 +1,7 @@
 #ifndef _GOOMBA_CONFIG_H_
 #define _GOOMBA_CONFIG_H_ 1
 
-typedef enum {
-	GOOMBA_KEYBOARD,
-	GOOMBA_JOYSTICK,
-} goomba_device;
+#include <goomba/control.h>
 
 typedef enum {
 	GOOMBA_UP,
@@ -13,8 +10,8 @@ typedef enum {
 	GOOMBA_RIGHT,
 	GOOMBA_SELECT,
 	GOOMBA_QUIT,
-	GOOMBA_CONTROLS
-} goomba_control;
+	GOOMBA_EVENTS
+} goomba_event_t;
 
 struct goomba_config_rgb {
 	unsigned char red;
@@ -39,16 +36,11 @@ struct goomba_config_selector {
 	unsigned char alpha;
 };
 
-struct goomba_config_control {
-	int device;
-	int button;
-};
-
 struct goomba_config {
 	struct goomba_config_background background;	
 	struct goomba_config_font font;
 	struct goomba_config_selector selector;
-	struct goomba_config_control control[GOOMBA_CONTROLS];
+	struct goomba_control control[GOOMBA_EVENTS];
 };
 
 int goomba_config_init( struct goomba_config *config );

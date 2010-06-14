@@ -1,19 +1,22 @@
 #ifndef _GOOMBA_ITEM_H_
 #define _GOOMBA_ITEM_H_ 1
 
+#include <goomba/control.h>
+
 typedef enum {
 	GOOMBA_INT,
 	GOOMBA_ENUM,
 	GOOMBA_STRING,
+	GOOMBA_CONTROL,
 	GOOMBA_FILESEL,
 	GOOMBA_FILE,
 	GOOMBA_MENU,
 	GOOMBA_ACTION
-} goomba_item_type;
+} goomba_item_t;
 
 typedef enum {
 	GOOMBA_BACK
-} goomba_action_type;
+} goomba_action_t;
 
 struct goomba_item_int {
 	int *value;
@@ -63,20 +66,21 @@ struct goomba_item_menu {
 };
 
 struct goomba_item_action {
-	goomba_action_type action;
+	goomba_action_t action;
 };
 
 struct goomba_item {
 	struct goomba_item *next;
 	struct goomba_item *prev;
 	struct goomba_item *parent;
-	goomba_item_type type;
+	goomba_item_t type;
 	char *text;
 	int (*callback)(void);
 	union {
 		struct goomba_item_int int_data;
 		struct goomba_item_enum enum_data;
 		struct goomba_item_string string_data;
+		struct goomba_control control_data;
 		struct goomba_item_file_selector filesel_data;
 		struct goomba_item_file file_data;
 		struct goomba_item_menu menu_data;
@@ -84,7 +88,7 @@ struct goomba_item {
 	};
 };
 
-struct goomba_item *goomba_item_create( goomba_item_type type );
+struct goomba_item *goomba_item_create( goomba_item_t type );
 void goomba_item_free( struct goomba_item *item );
 int goomba_item_append_child( struct goomba_item *parent, struct goomba_item *child );
 int goomba_item_add_child_sorted( struct goomba_item *parent, struct goomba_item *child );

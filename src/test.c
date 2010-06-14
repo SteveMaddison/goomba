@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <SDL/SDL.h>
+#include <goomba/control.h>
 #include <goomba/gui.h>
 
 #define SCREEN_X 800
@@ -62,6 +63,7 @@ int main( int argc, char *argv[] ) {
 	struct goomba_item *item_enum = goomba_item_create( GOOMBA_ENUM );
 	struct goomba_item *item_submenu = goomba_item_create( GOOMBA_MENU );
 	struct goomba_item *item_string = goomba_item_create( GOOMBA_STRING );
+	struct goomba_item *item_ctrl = goomba_item_create( GOOMBA_CONTROL );
 	struct goomba_item *item_file = goomba_item_create( GOOMBA_FILESEL );
 
 	int int_val = 0;
@@ -97,6 +99,9 @@ int main( int argc, char *argv[] ) {
 	item_string->string_data.value = &buffer[0];
 	item_string->string_data.size = STRING_LEN;
 
+	item_ctrl->text = "A control";
+	item_ctrl->control_data.device = GOOMBA_DEV_KEYBOARD;
+
 	item_file->text = "File name";
 	item_file->filesel_data.value = &file[0];
 	item_file->filesel_data.size = FILE_LEN;
@@ -106,6 +111,7 @@ int main( int argc, char *argv[] ) {
 
 	goomba_item_append_child( gui->root, item_enum );
 	goomba_item_append_child( gui->root, item_string );
+	goomba_item_append_child( gui->root, item_ctrl );
 	goomba_item_append_child( gui->root, item_file );
 	goomba_item_append_child( gui->root, item_submenu );
 	goomba_item_append_child( gui->root, item_exit );

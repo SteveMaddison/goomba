@@ -7,7 +7,7 @@
 #include <goomba/item.h>
 #include <goomba/gui.h>
 
-struct goomba_item *goomba_item_create( goomba_item_type type ) {
+struct goomba_item *goomba_item_create( goomba_item_t type ) {
 	struct goomba_item *item = malloc( sizeof(struct goomba_item) );
 
 	if( item == NULL ) {
@@ -25,6 +25,7 @@ struct goomba_item *goomba_item_create( goomba_item_type type ) {
 				break;
 			case GOOMBA_ENUM:
 			case GOOMBA_STRING:
+			case GOOMBA_CONTROL:
 			case GOOMBA_FILESEL:
 			case GOOMBA_FILE:
 			case GOOMBA_MENU:
@@ -51,6 +52,7 @@ void goomba_item_free( struct goomba_item *item ) {
 		switch( item->type ) {
 			case GOOMBA_INT:
 			case GOOMBA_STRING:
+			case GOOMBA_CONTROL:
 			case GOOMBA_ACTION:
 				free( item );
 				item = NULL;

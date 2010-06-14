@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <goomba/control.h>
 #include <goomba/font.h>
 #include <goomba/gui.h>
 
 typedef enum {
 	GOOMBA_ALIGN_LEFT,
 	GOOMBA_ALIGN_RIGHT
-} goomba_align;
+} goomba_align_t;
 
 static SDL_Surface *screen = NULL;
 static SDL_Surface *bg_original = NULL;
@@ -55,7 +56,7 @@ int goomba_gui_draw_bar( int y ) {
 	return 0;
 }
 
-int goomba_gui_draw_text( char *text, int x, int y, goomba_align align ) {
+int goomba_gui_draw_text( char *text, int x, int y, goomba_align_t align ) {
 	SDL_Surface *s = NULL;
 	SDL_Rect offset;
 	
@@ -130,6 +131,15 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 			if( item->string_data.value && item->string_data.value ) {
 				goomba_gui_draw_text( item->string_data.value, screen->w - bar.offset - bar.margin,
 					offset + bar.margin, GOOMBA_ALIGN_RIGHT );
+			}
+			break;
+		case GOOMBA_CONTROL: {
+				char name[32];
+				goomba_gui_draw_text( item->text, bar.offset + bar.margin, offset + bar.margin, GOOMBA_ALIGN_LEFT );
+				if( goomba_control_string( name, 32, &item->control_data ) == 0 ) {
+					goomba_gui_draw_text( name, screen->w - bar.offset - bar.margin,
+					offset + bar.margin, GOOMBA_ALIGN_RIGHT );
+				}
 			}
 			break;
 		case GOOMBA_FILESEL:
@@ -238,8 +248,8 @@ void goomba_gui_event_flush( void ) {
 
 void goomba_gui_event_loop( struct goomba_config *config ) {
 	SDL_Event sdl_event;
-	goomba_control event = -1;
-	int c;
+	goomba_event_t event = -1;
+	int i;
 	int quit = 0;
 	
 	while( !quit ) {
@@ -249,11 +259,11 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 				quit = 1;
 			}
 			else {
-				for( c = 0 ; c < GOOMBA_CONTROLS ; c++ ) {
+				for( i = 0 ; i < GOOMBA_EVENTS ; i++ ) {
 					if( sdl_event.type == SDL_KEYDOWN
-					&& config->control[c].device == GOOMBA_KEYBOARD
-					&& sdl_event.key.keysym.sym == config->control[c].button ) {
-						event = c;
+					&& config->control[i].device == GOOMBA_DEV_KEYBOARD
+					&& sdl_event.key.keysym.sym == config->control[i].value ) {
+						event = i;
 					}
 				}
 			}
