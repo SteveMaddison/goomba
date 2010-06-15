@@ -15,7 +15,7 @@ SDL_Surface *optimized = NULL;
 
 int quit = 0;
 
-int quit_callback( void ) {
+int quit_callback( struct goomba_item *item ) {
 	quit = 1;
 	return 0;
 }

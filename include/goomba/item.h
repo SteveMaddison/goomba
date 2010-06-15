@@ -79,7 +79,7 @@ struct goomba_item {
 	goomba_item_t type;
 	char *text;
 	goomba_action_t action;
-	int (*callback)(void);
+	int (*callback)(struct goomba_item *item);
 	union {
 		struct goomba_item_int int_data;
 		struct goomba_item_enum enum_data;

@@ -239,9 +239,6 @@ void goomba_item_advance( struct goomba_item *item ) {
 				/* No effect */
 				break;
 		}
-		if( item->callback && *item->callback ) {
-			item->callback();
-		}
 	}
 }
 
@@ -266,9 +263,6 @@ void goomba_item_retreat( struct goomba_item *item ) {
 			default:
 				/* No effect */
 				break;
-		}
-		if( item->callback && *item->callback ) {
-			item->callback();
 		}
 	}
 }

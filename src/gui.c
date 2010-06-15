@@ -373,7 +373,7 @@ int goomba_gui_capture_control( struct goomba_control *control ) {
 int goomba_gui_event_postprocess( struct goomba_item *item ) {
 	/* Call the callbakc function and process any actions. */
 	if( item->callback ) {
-		item->callback();
+		item->callback( item );
 	}
 
 	if( item->action == GOOMBA_EXIT ) {
