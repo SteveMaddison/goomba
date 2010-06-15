@@ -1,0 +1,24 @@
+CC = arm-none-linux-gnueabi-gcc
+LD = arm-none-linux-gnueabi-gcc
+LIB = goomba
+
+CFLAGS = -Wall -I./include -I/opt/local/include -I/usr/include -fPIC -g
+LDFLAGS = -L/opt/local/lib -L/usr/local/pandora/arm-2009q3/usr/lib -lSDL -lSDL_ttf -lfreetype -lts
+LIBNAME = lib$(LIB)
+
+OBJS = src/config.o src/control.o src/font.o src/gui.o src/item.o src/key.o
+
+all: $(LIBNAME).so test
+
+$(LIBNAME).so: $(OBJS)
+	$(LD) -o $(LIBNAME).so -shared $(LDFLAGS) $(OBJS)
+
+test: src/test.o $(LIBNAME).so
+	$(LD) -o test src/test.o $(LDFLAGS) -L. -l$(LIB)
+
+.c.o: %.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+clean:
+	rm -f $(LIBNAME).so *.o src/*.o test
+
