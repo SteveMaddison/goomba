@@ -1,5 +1,9 @@
+PREFIX = /usr
+
 CC = arm-none-linux-gnueabi-gcc
 LD = arm-none-linux-gnueabi-gcc
+INSTALL = install
+
 LIB = goomba
 
 CFLAGS = -Wall -I./include -I/opt/local/include -I/usr/include -fPIC -g
@@ -13,6 +17,11 @@ all: $(LIBNAME).so test
 $(LIBNAME).so: $(OBJS)
 	$(LD) -o $(LIBNAME).so -shared $(LDFLAGS) $(OBJS)
 
+install: all
+	$(INSTALL) -m 755 -t $(PREFIX)/lib $(LIBNAME).so
+	$(INSTALL) -m 755 -d $(PREFIX)/include/$(LIB)
+	$(INSTALL) -m 644 -t $(PREFIX)/include/$(LIB) include/$(LIB)/*.h
+
 test: src/test.o $(LIBNAME).so
 	$(LD) -o test src/test.o $(LDFLAGS) -L. -l$(LIB)
 
@@ -21,4 +30,5 @@ test: src/test.o $(LIBNAME).so
 
 clean:
 	rm -f $(LIBNAME).so *.o src/*.o test
+
 
