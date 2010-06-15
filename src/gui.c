@@ -389,6 +389,8 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 	int i;
 	int quit = 0;
 	
+	SDL_EnableKeyRepeat( SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL * 2 );
+	
 	while( !quit ) {
 		event = -1;
 		if( SDL_PollEvent( &sdl_event ) ) {
@@ -430,6 +432,34 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 					}
 					else {
 						goomba_item_advance( current_item );
+					}
+					break;
+				case GOOMBA_SKIP_F:
+					if( current_item->type == GOOMBA_MENU ) {
+						int skip = max_items;
+						
+						if( current_item->text ) {
+							skip--;
+						}
+						
+						while( skip && current_item->menu_data.selected != current_item->menu_data.items->prev ) {
+							goomba_item_advance( current_item );
+							skip--;
+						}
+					}
+					break;
+				case GOOMBA_SKIP_B:
+					if( current_item->type == GOOMBA_MENU ) {
+						int skip = max_items;
+						
+						if( current_item->text ) {
+							skip--;
+						}
+						
+						while( skip && current_item->menu_data.selected != current_item->menu_data.items ) {
+							goomba_item_retreat( current_item );
+							skip--;
+						}
 					}
 					break;
 				case GOOMBA_SELECT:

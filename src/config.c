@@ -23,6 +23,8 @@ int goomba_config_init( struct goomba_config *config ) {
 	config->control[GOOMBA_DOWN].value   = SDLK_DOWN;
 	config->control[GOOMBA_LEFT].value   = SDLK_LEFT;
 	config->control[GOOMBA_RIGHT].value  = SDLK_RIGHT;
+	config->control[GOOMBA_SKIP_F].value = SDLK_PAGEDOWN;
+	config->control[GOOMBA_SKIP_B].value = SDLK_PAGEUP;
 	config->control[GOOMBA_SELECT].value = SDLK_RETURN;
 	config->control[GOOMBA_QUIT].value   = SDLK_ESCAPE;
 
