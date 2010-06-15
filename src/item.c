@@ -369,24 +369,10 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 			}
 				break;
 			case GOOMBA_MENU:
-				switch( item->menu_data.selected->type ) {
-					case GOOMBA_MENU:
-						/* Nested menu: select the first option and return new menu. */
-						item->menu_data.selected->menu_data.selected = item->menu_data.selected->menu_data.items;
-						new_item = item->menu_data.selected;
-						break;
-					case GOOMBA_CONTROL:
-					case GOOMBA_ACTION:
-					case GOOMBA_FILESEL:
-					case GOOMBA_FILE:
-						new_item = goomba_item_select( item->menu_data.selected );
-						break;
-					default:
-						break;
-				}
+				/* Should never hit this as nested menus are handled by the caller. */
 				break;
 			case GOOMBA_ACTION:
-				if( item->action_data.action == GOOMBA_BACK ) {
+				if( item->action == GOOMBA_BACK ) {
 					new_item = item->parent;
 					if( new_item->type == GOOMBA_MENU ) {
 						new_item = new_item->parent;
@@ -396,10 +382,6 @@ struct goomba_item *goomba_item_select( struct goomba_item *item ) {
 			default:
 				break;
 		}
-	}
-	
-	if( item->callback && *item->callback ) {
-		item->callback();
 	}
 	
 	return new_item;
@@ -601,6 +583,7 @@ void goomba_item_dump( struct goomba_item *item ) {
 						p = p->next;
 					}
 				}
+				printf("\n");
 				break;
 
 			case GOOMBA_MENU:
@@ -619,7 +602,7 @@ void goomba_item_dump( struct goomba_item *item ) {
 
 			case GOOMBA_ACTION:
 				printf( "(action) action=%d\n",
-					item->action_data.action );
+					item->action );
 				break;
 
 			default:

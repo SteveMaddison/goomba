@@ -15,7 +15,9 @@ typedef enum {
 } goomba_item_t;
 
 typedef enum {
-	GOOMBA_BACK
+	GOOMBA_BACK,
+	GOOMBA_EXIT,
+    GOOMBA_CUSTOM
 } goomba_action_t;
 
 struct goomba_item_int {
@@ -69,9 +71,6 @@ struct goomba_item_menu {
 	struct goomba_item *selected;
 };
 
-struct goomba_item_action {
-	goomba_action_t action;
-};
 
 struct goomba_item {
 	struct goomba_item *next;
@@ -79,6 +78,7 @@ struct goomba_item {
 	struct goomba_item *parent;
 	goomba_item_t type;
 	char *text;
+	goomba_action_t action;
 	int (*callback)(void);
 	union {
 		struct goomba_item_int int_data;
@@ -88,7 +88,6 @@ struct goomba_item {
 		struct goomba_item_file_selector filesel_data;
 		struct goomba_item_file file_data;
 		struct goomba_item_menu menu_data;
-		struct goomba_item_action action_data;
 	};
 };
 

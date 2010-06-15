@@ -109,6 +109,7 @@ int main( int argc, char *argv[] ) {
 	item_file->text = "File name";
 	item_file->filesel_data.value = &file[0];
 	item_file->filesel_data.size = FILE_LEN;
+	item_file->action = GOOMBA_EXIT;
 
 	gui->root = goomba_item_create( GOOMBA_MENU );
 	gui->root->text = "Main Menu";

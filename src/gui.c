@@ -175,7 +175,9 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 			goomba_gui_draw_text( item->text, tmp, offset + bar.margin );
 			break;
 		case GOOMBA_ENUM:
-			goomba_gui_draw_text( item->text, item->enum_data.selected->name, offset + bar.margin );
+			goomba_gui_draw_text( item->text,
+				(item->enum_data.selected && item->enum_data.selected->name) ? item->enum_data.selected->name : "",
+				offset + bar.margin );
 			break;
 		case GOOMBA_STRING:
 			goomba_gui_draw_text( item->text, item->string_data.value, offset + bar.margin );
@@ -368,6 +370,19 @@ int goomba_gui_capture_control( struct goomba_control *control ) {
 	return -1;
 }
 
+int goomba_gui_event_postprocess( struct goomba_item *item ) {
+	/* Call the callbakc function and process any actions. */
+	if( item->callback ) {
+		item->callback();
+	}
+
+	if( item->action == GOOMBA_EXIT ) {
+		return -1;
+	}
+
+	return 0;
+}
+
 void goomba_gui_event_loop( struct goomba_config *config ) {
 	SDL_Event sdl_event;
 	goomba_event_t event = -1;
@@ -418,9 +433,24 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 					}
 					break;
 				case GOOMBA_SELECT:
-					current_item = goomba_item_select( current_item );
-					if( current_item == NULL ) {
-						quit = 1;
+					if( current_item->type == GOOMBA_MENU ) {
+						if( current_item->menu_data.selected->type == GOOMBA_MENU ) {
+							/* Nexted menu */
+							current_item = current_item->menu_data.selected;
+							current_item->menu_data.selected = current_item->menu_data.items;
+						}
+						else {
+							current_item = goomba_item_select( current_item->menu_data.selected );
+							if( goomba_gui_event_postprocess( current_item->menu_data.selected ) != 0 ) {
+								quit = 1;
+							}
+						}
+					}
+					else {
+						current_item = goomba_item_select( current_item );
+						if( goomba_gui_event_postprocess( current_item ) != 0 ) {
+							quit = 1;
+						}
 					}
 					break;
 				case GOOMBA_QUIT:
@@ -429,7 +459,18 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 				default:
 					break;
 			}
+
+			if( current_item->type != GOOMBA_MENU ) {
+				/* Menu items do this themselves... */
+				if( goomba_gui_event_postprocess( current_item ) != 0 ) {
+					quit = 1;
+				}
+			}
 			
+			if( current_item == NULL ) {
+				quit = 1;
+			}
+
 			if( event >= 0 && event < GOOMBA_QUIT ) {
 				if( !quit ) {
 					goomba_gui_draw();
