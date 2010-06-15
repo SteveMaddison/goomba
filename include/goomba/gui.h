@@ -10,6 +10,10 @@ struct goomba_gui {
 	struct goomba_item *root;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct goomba_gui *goomba_gui_create( void );
 void goomba_gui_free( struct goomba_gui *gui );
 
@@ -17,6 +21,10 @@ int goomba_gui_start( struct goomba_gui *gui, SDL_Surface *s );
 int goomba_gui_draw( void );
 int goomba_gui_capture_control( struct goomba_control *control );
 void goomba_gui_dump( struct goomba_gui *gui );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

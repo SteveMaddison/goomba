@@ -35,7 +35,15 @@ struct goomba_control {
 	int value;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int goomba_control_string( char *buf, int size, struct goomba_control *control );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

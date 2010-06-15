@@ -43,7 +43,15 @@ struct goomba_config {
 	struct goomba_control control[GOOMBA_EVENTS];
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int goomba_config_init( struct goomba_config *config );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
