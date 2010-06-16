@@ -471,7 +471,9 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 						}
 						else {
 							current_item = goomba_item_select( current_item->menu_data.selected );
-							if( goomba_gui_event_postprocess( current_item->menu_data.selected ) != 0 ) {
+							if( (current_item == NULL)
+							||  (current_item->menu_data.selected == NULL)
+							||  (goomba_gui_event_postprocess( current_item->menu_data.selected ) != 0 ) ) {
 								quit = 1;
 							}
 						}
@@ -490,7 +492,7 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 					break;
 			}
 
-			if( current_item->type != GOOMBA_MENU ) {
+			if( current_item && current_item->type != GOOMBA_MENU ) {
 				/* Menu items do this themselves... */
 				if( goomba_gui_event_postprocess( current_item ) != 0 ) {
 					quit = 1;
