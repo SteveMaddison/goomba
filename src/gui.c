@@ -370,19 +370,6 @@ int goomba_gui_capture_control( struct goomba_control *control ) {
 	return -1;
 }
 
-int goomba_gui_event_postprocess( struct goomba_item *item ) {
-	/* Call the callbakc function and process any actions. */
-	if( item->callback ) {
-		item->callback( item );
-	}
-
-	if( item->action == GOOMBA_EXIT ) {
-		return -1;
-	}
-
-	return 0;
-}
-
 void goomba_gui_event_loop( struct goomba_config *config ) {
 	SDL_Event sdl_event;
 	goomba_event_t event = -1;
@@ -462,29 +449,143 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 						}
 					}
 					break;
-				case GOOMBA_SELECT:
-					if( current_item->type == GOOMBA_MENU ) {
-						if( current_item->menu_data.selected->type == GOOMBA_MENU ) {
-							/* Nexted menu */
-							current_item = current_item->menu_data.selected;
-							current_item->menu_data.selected = current_item->menu_data.items;
+				case GOOMBA_SELECT: {
+						struct goomba_item *selected = current_item;
+						
+						if( current_item->type == GOOMBA_MENU ) {
+							selected = current_item->menu_data.selected;
 						}
-						else {
-							current_item = goomba_item_select( current_item->menu_data.selected );
-							if( (current_item == NULL)
-							||  (current_item->menu_data.selected == NULL)
-							||  (goomba_gui_event_postprocess( current_item->menu_data.selected ) != 0 ) ) {
-								quit = 1;
-							}
-						}
-					}
-					else {
-						current_item = goomba_item_select( current_item );
-						if( goomba_gui_event_postprocess( current_item ) != 0 ) {
-							quit = 1;
+							
+						switch( selected->type ) {
+							case GOOMBA_MENU:
+								/* Nested menu */
+								current_item = selected;
+								/* Select first item. */
+								current_item->menu_data.selected = current_item->menu_data.items;
+								break;
+								
+							case GOOMBA_FILESEL: {
+									char *dir = selected->filesel_data.directory;
+									if( selected->filesel_data.value && *selected->filesel_data.value ) {
+										char *slash = strrchr( selected->filesel_data.value, '/' );
+										if( slash ) {
+											*slash = 0;
+										}
+										dir = selected->filesel_data.value;
+									}
+									current_item = goomba_item_file_selector(
+										selected->filesel_data.value,
+										selected->filesel_data.size,
+										dir,
+										selected );
+								}
+								break;
+	
+							case GOOMBA_FILE: {
+									struct goomba_item *menu = selected->parent;
+									struct goomba_item *p = menu->menu_data.items;
+									
+									if( selected->file_data.dir ) {
+										/* Directory was selected, build a new selector for the contents. */
+										char *dir = NULL;
+										
+										if( strcmp( selected->text, ".." ) == 0 ) {
+											char *slash = strrchr( menu->text, '/' );
+											if( slash ) {
+												*slash = 0;
+												dir = malloc( strlen(menu->text) + 1 );
+												strcpy( dir, menu->text );
+											}
+										}
+										else {
+											if( strcmp( menu->text, "/" ) == 0 ) {
+												dir = malloc( strlen(selected->text) + 2 );
+												sprintf( dir, "/%s", selected->text );
+											}
+											else {
+												dir = malloc( strlen(menu->text) + strlen(selected->text) + 2 );
+												sprintf( dir, "%s/%s", menu->text, selected->text );
+											}
+										}
+								
+										current_item = goomba_item_file_selector(
+											menu->parent->filesel_data.value,
+											menu->parent->filesel_data.size,
+											dir,
+											menu->parent );
+										
+										free( dir );
+									}
+									else {
+										/* File was selected. */
+										if( strcmp( menu->text, "/" ) == 0 ) {
+											snprintf( menu->parent->filesel_data.value, menu->parent->filesel_data.size,
+												"/%s", selected->text );
+										}
+										else {
+											snprintf( menu->parent->filesel_data.value, menu->parent->filesel_data.size,
+												"%s/%s", menu->text, selected->text );					
+										}
+										current_item = menu->parent->parent;
+										
+										/* File selector callback and action. */
+										if( menu->parent->callback ) {
+											menu->parent->callback( menu->parent );
+										}
+										if( menu->parent->action == GOOMBA_EXIT ) {
+											quit = 1;
+										}
+									}
+									
+									/* Free the old menu, and all associated buffers. */
+									do {
+										free( p->text );
+										p = p->next;
+									} while( p != menu->menu_data.items );
+									free( menu->text );
+									goomba_item_free( menu );
+								}
+								break;
+	
+							case GOOMBA_ACTION:
+								if( selected->action == GOOMBA_BACK ) {
+									current_item = selected->parent;
+									if( current_item->type == GOOMBA_MENU ) {
+										current_item = current_item->parent;
+									}
+								}
+								else if( selected->action == GOOMBA_EXIT ) {
+									quit = 1;
+								}
+								if( selected->callback ) {
+									selected->callback( selected );
+								}
+								break;
+	
+							case GOOMBA_CONTROL: {
+									int original = selected->control_data.control->device_type;
+						
+									/* Redraw item/menu with empty value. */
+									selected->control_data.control->device_type = GOOMBA_DEV_UNKNOWN;
+									goomba_gui_draw();
+									
+									if( goomba_gui_capture_control( selected->control_data.control ) != 0 ) {
+										/* Error or timeout: restore original control. */
+										selected->control_data.control->device_type = original;
+									}				
+
+									if( selected->callback ) {
+										selected->callback( selected );
+									}
+								}
+								break;
+	
+							default:
+								break;
 						}
 					}
 					break;
+
 				case GOOMBA_QUIT:
 					quit = 1;
 					break;
@@ -492,13 +593,6 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 					break;
 			}
 
-			if( current_item && current_item->type != GOOMBA_MENU ) {
-				/* Menu items do this themselves... */
-				if( goomba_gui_event_postprocess( current_item ) != 0 ) {
-					quit = 1;
-				}
-			}
-			
 			if( current_item == NULL ) {
 				quit = 1;
 			}

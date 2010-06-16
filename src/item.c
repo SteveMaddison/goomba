@@ -225,10 +225,16 @@ void goomba_item_advance( struct goomba_item *item ) {
 				if( *item->int_data.value > item->int_data.max ) {
 					*item->int_data.value = item->int_data.max;
 				}
+				if( item->callback ) {
+					item->callback( item );
+				}
 				break;
 			case GOOMBA_ENUM:
 				item->enum_data.selected = item->enum_data.selected->next;
 				*item->enum_data.value = item->enum_data.selected->value;
+				if( item->callback ) {
+					item->callback( item );
+				}
 				break;
 			
 			case GOOMBA_MENU:
@@ -250,10 +256,16 @@ void goomba_item_retreat( struct goomba_item *item ) {
 				if( *item->int_data.value < item->int_data.min ) {
 					*item->int_data.value = item->int_data.min;
 				}
+				if( item->callback ) {
+					item->callback( item );
+				}
 				break;
 			case GOOMBA_ENUM:
 				item->enum_data.selected = item->enum_data.selected->prev;
 				*item->enum_data.value = item->enum_data.selected->value;
+				if( item->callback ) {
+					item->callback( item );
+				}
 				break;
 			
 			case GOOMBA_MENU:
@@ -265,120 +277,6 @@ void goomba_item_retreat( struct goomba_item *item ) {
 				break;
 		}
 	}
-}
-
-struct goomba_item *goomba_item_select( struct goomba_item *item ) {
-	struct goomba_item *new_item = item;
-
-	if( item ) {
-		switch( item->type ) {
-			case GOOMBA_STRING:
-				break;
-			case GOOMBA_CONTROL: {
-				int original = item->control_data.control->device_type;
-
-				/* Redraw item/menu with empty value. */
-				item->control_data.control->device_type = GOOMBA_DEV_UNKNOWN;
-				goomba_gui_draw();
-				
-				if( goomba_gui_capture_control( item->control_data.control ) != 0 ) {
-					/* Error or timeout: restore original control. */
-					item->control_data.control->device_type = original;
-				}
-				
-				if( item->parent && item->parent->type == GOOMBA_MENU ) {
-					new_item = item->parent;
-				}
-			}
-				break;
-			case GOOMBA_FILESEL: {
-				char *dir = item->filesel_data.directory;
-				if( item->filesel_data.value && *item->filesel_data.value ) {
-					char *slash = strrchr( item->filesel_data.value, '/' );
-					if( slash ) {
-						*slash = 0;
-					}
-					dir = item->filesel_data.value;
-				}
-				new_item = goomba_item_file_selector(
-					item->filesel_data.value,
-					item->filesel_data.size,
-					dir,
-					item );
-				}
-				break;
-			case GOOMBA_FILE: {
-				struct goomba_item *menu = item->parent;
-				struct goomba_item *p = menu->menu_data.items;
-				
-				if( item->file_data.dir ) {
-					char *dir = NULL;
-					
-					if( strcmp( item->text, ".." ) == 0 ) {
-						char *slash = strrchr( menu->text, '/' );
-						if( slash ) {
-							*slash = 0;
-							dir = malloc( strlen(menu->text) + 1 );
-							strcpy( dir, menu->text );
-						}
-					}
-					else {
-						if( strcmp( menu->text, "/" ) == 0 ) {
-							dir = malloc( strlen(item->text) + 2 );
-							sprintf( dir, "/%s", item->text );
-						}
-						else {
-							dir = malloc( strlen(menu->text) + strlen(item->text) + 2 );
-							sprintf( dir, "%s/%s", menu->text, item->text );
-						}
-					}
-			
-					new_item = goomba_item_file_selector(
-						menu->parent->filesel_data.value,
-						menu->parent->filesel_data.size,
-						dir,
-						menu->parent );
-					
-					free( dir );
-				}
-				else {
-					if( strcmp( menu->text, "/" ) == 0 ) {
-						snprintf( menu->parent->filesel_data.value, menu->parent->filesel_data.size,
-							"/%s", item->text );
-					}
-					else {
-						snprintf( menu->parent->filesel_data.value, menu->parent->filesel_data.size,
-							"%s/%s", menu->text, item->text );					
-					}
-					new_item = menu->parent->parent;
-				}
-				
-				/* Free the old menu, and all associated buffers. */
-				do {
-					free( p->text );
-					p = p->next;
-				} while( p != menu->menu_data.items );
-				free( menu->text );
-				goomba_item_free( menu );
-			}
-				break;
-			case GOOMBA_MENU:
-				/* Should never hit this as nested menus are handled by the caller. */
-				break;
-			case GOOMBA_ACTION:
-				if( item->action == GOOMBA_BACK ) {
-					new_item = item->parent;
-					if( new_item->type == GOOMBA_MENU ) {
-						new_item = new_item->parent;
-					}
-				}
-				break;
-			default:
-				break;
-		}
-	}
-	
-	return new_item;
 }
 
 int goomba_item_child_count( struct goomba_item *item ) {
