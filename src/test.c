@@ -98,7 +98,7 @@ int main( int argc, char *argv[] ) {
 	goomba_item_append_child( item_submenu, item_number );
 	goomba_item_append_child( item_submenu, item_back );
 
-	item_string->text = "Some string";
+	item_string->text = "Some string that's really rather too long to fit in the alloted space.";
 	item_string->string_data.value = &buffer[0];
 	item_string->string_data.size = STRING_LEN;
 	strcpy( buffer, "0123456789012345678901234567890123456789" );

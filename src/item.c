@@ -333,6 +333,8 @@ struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *sta
 	DIR *dir = NULL;
 	struct dirent *dentry;
 	char *dirname = start;
+	struct goomba_item *item = NULL; 
+	char *buf = NULL;
 	
 	if( dirname && *dirname ) {
 		dir = opendir( dirname );
@@ -362,40 +364,48 @@ struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *sta
 	}
 	
 	while( (dentry = readdir( dir )) ) {
-		if( strcmp( dentry->d_name, "." ) != 0 ) {
-			struct goomba_item *item = goomba_item_create( GOOMBA_ITEM_FILE );
-			char *buf = malloc( strlen(dentry->d_name) + 1 );
+		if( strcmp( dentry->d_name, "." ) == 0 ) {
+			continue;
+		}
+
+		if( parent->filesel_data.show_hidden == 0
+		&& *dentry->d_name == '.' 
+		&& strcmp( dentry->d_name, ".." ) != 0 ) {
+			continue;
+		}
+
+		item = goomba_item_create( GOOMBA_ITEM_FILE );
+		buf = malloc( strlen(dentry->d_name) + 1 );
 		
-			if( buf == NULL ) {
-				fprintf( stderr, "Couldn't allocate buffer for file name.\n" );
-				goomba_item_free( item );
+		if( buf == NULL ) {
+			fprintf( stderr, "Couldn't allocate buffer for file name.\n" );
+			goomba_item_free( item );
+		}
+		else {
+			item->parent = menu;
+			strcpy( buf, dentry->d_name );
+			item->text = buf;
+			if( dentry->d_type == DT_DIR ) {
+				item->file_data.dir = 1;
 			}
-			else {
-				item->parent = menu;
-				strcpy( buf, dentry->d_name );
-				item->text = buf;
-				if( dentry->d_type == DT_DIR ) {
-					item->file_data.dir = 1;
+			else if( dentry->d_type == DT_LNK ) {
+				/* Is there a better way? */
+				char *tmp = malloc( strlen(dirname) + strlen(dentry->d_name) + 2 );
+				DIR *lnk = NULL;
+				
+				if( tmp == NULL ) {
+					fprintf( stderr, "Couldn't allocate buffer for link name.\n" );
 				}
-				else if( dentry->d_type == DT_LNK ) {
-					/* Is there a better way? */
-					char *tmp = malloc( strlen(dirname) + strlen(dentry->d_name) + 2 );
-					DIR *lnk = NULL;
-					
-					if( tmp == NULL ) {
-						fprintf( stderr, "Couldn't allocate buffer for link name.\n" );
-					}
-					else {
-						sprintf( tmp, "%s/%s", dirname, dentry->d_name );
-						lnk = opendir( tmp );
-						if( lnk && errno != ENOTDIR )
-							item->file_data.dir = 1;
-						closedir( lnk );
-						free( tmp );
-					}
+				else {
+					sprintf( tmp, "%s/%s", dirname, dentry->d_name );
+					lnk = opendir( tmp );
+					if( lnk && errno != ENOTDIR )
+						item->file_data.dir = 1;
+					closedir( lnk );
+					free( tmp );
 				}
-				goomba_item_add_child_sorted( menu, item );
 			}
+			goomba_item_add_child_sorted( menu, item );
 		}
 	}
 

@@ -65,6 +65,7 @@ struct goomba_item_file_selector {
 	char *value;
 	int size;
 	char *directory;
+	int show_hidden;
 	struct goomba_file_filter *filters;
 };
 

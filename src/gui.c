@@ -83,30 +83,37 @@ int goomba_gui_draw_text( char *text_left, char *text_right, int y ) {
 	SDL_Surface *sr = NULL;
 	SDL_Surface *dots = NULL;
 	SDL_Rect offset;
+	SDL_Rect chop;
 	int end;
 	
 	sl = goomba_font_render( text_left, GOOMBA_FONT_LARGE );
 	sr = goomba_font_render( text_right, GOOMBA_FONT_LARGE );
 
+	chop.x = 0;
+	chop.y = 0;
 	offset.y = y;
+	
 	if( sl ) {
+		int max_width = screen->w - (bar.offset * 2) - (bar.margin * 2);
+		max_width = (max_width * 100) / 120;
+
+		chop.w = sl->w > max_width ? max_width : sl->w;
+		chop.h = sl->h;
+
 		offset.x = bar.offset + bar.margin;
-		SDL_BlitSurface( sl, NULL, screen, &offset );
-		SDL_FreeSurface( sl );
+		SDL_BlitSurface( sl, &chop, screen, &offset );
+		SDL_FreeSurface( sl );	
 	}
 	if( sr ) {
-		SDL_Rect chop;
-		chop.x = 0;
-		chop.y = 0;
-		chop.w = sr->w;
-		chop.h = sr->h;
-
 		/* Check if we need to truncate the value text. */
 		if( sl ) {
-			end = bar.offset + sl->w + (bar.margin * 3);
+			end = bar.offset + chop.w + (bar.margin * 3);
 		} else {
 			end = bar.offset + bar.margin;
 		}
+
+		chop.w = sr->w;
+		chop.h = sr->h;
 
 		offset.x = screen->w - bar.offset - bar.margin - sr->w;			
 		if( offset.x < end ) {
