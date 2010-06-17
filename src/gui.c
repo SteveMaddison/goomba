@@ -581,6 +581,13 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 					}
 					break;
 
+				case GOOMBA_EVENT_BACK:
+					current_item = current_item->parent;
+					while( current_item && current_item->type != GOOMBA_ITEM_MENU ) {
+						current_item = current_item->parent;
+					}
+					break;
+
 				case GOOMBA_EVENT_QUIT:
 					quit = 1;
 					break;

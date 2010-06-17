@@ -3,6 +3,25 @@
 
 const char *goomba_key_name( int key ) {
 	switch( key ) {
+#ifdef PANDORA
+		case SDLK_HOME: return "(A)";
+		case SDLK_END: return "(B)";
+		case SDLK_PAGEUP: return "(Y)";
+		case SDLK_PAGEDOWN: return "(X)";
+		case SDLK_RSHIFT: return "(L)";
+		case SDLK_RCTRL: return "(R)";
+		case SDLK_LCTRL: return "Select";
+		case SDLK_LALT: return "Start";
+#else
+		case SDLK_HOME: return "Home";
+		case SDLK_END: return "End";
+		case SDLK_PAGEUP: return "PgUp";
+		case SDLK_PAGEDOWN: return "PgDn";
+		case SDLK_RSHIFT: return "RShift";
+		case SDLK_RCTRL: return "RCtrl";
+		case SDLK_LCTRL: return "LCtrl";
+		case SDLK_LALT: return "LAlt";
+#endif
 		case SDLK_BACKSPACE: return "Backspace";
 		case SDLK_TAB: return "Tab";
 		case SDLK_CLEAR: return "Clear";
@@ -192,10 +211,6 @@ const char *goomba_key_name( int key ) {
 		case SDLK_RIGHT: return "Right";
 		case SDLK_LEFT: return "Left";
 		case SDLK_INSERT: return "Ins";
-		case SDLK_HOME: return "Home";
-		case SDLK_END: return "End";
-		case SDLK_PAGEUP: return "PgUp";
-		case SDLK_PAGEDOWN: return "PgDn";
 		case SDLK_F1: return "F1";
 		case SDLK_F2: return "F2";
 		case SDLK_F3: return "F3";
@@ -214,12 +229,8 @@ const char *goomba_key_name( int key ) {
 		case SDLK_NUMLOCK: return "Numlock";
 		case SDLK_CAPSLOCK: return "Capslock";
 		case SDLK_SCROLLOCK: return "Scrollock";
-		case SDLK_RSHIFT: return "RShift";
 		case SDLK_LSHIFT: return "LShift";
-		case SDLK_RCTRL: return "RCtrl";
-		case SDLK_LCTRL: return "LCtrl";
 		case SDLK_RALT: return "RAlt";
-		case SDLK_LALT: return "LAlt";
 		case SDLK_RMETA: return "RMeta";
 		case SDLK_LMETA: return "LMeta";
 		case SDLK_LSUPER: return "LSuper";

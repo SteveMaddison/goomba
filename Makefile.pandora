@@ -6,7 +6,7 @@ INSTALL = install
 
 LIB = goomba
 
-CFLAGS = -Wall -I./include -I/opt/local/include -I/usr/include -fPIC -g
+CFLAGS = -Wall -I./include -I/opt/local/include -I/usr/include -fPIC -g -DPANDORA
 LDFLAGS = -L/opt/local/lib -L/usr/local/pandora/arm-2009q3/usr/lib -lSDL -lSDL_ttf -lfreetype -lts
 LIBNAME = lib$(LIB)
 

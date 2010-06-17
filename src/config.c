@@ -26,6 +26,7 @@ int goomba_config_init( struct goomba_config *config ) {
 	config->control[GOOMBA_EVENT_SKIP_F].value = SDLK_PAGEDOWN;
 	config->control[GOOMBA_EVENT_SKIP_B].value = SDLK_PAGEUP;
 	config->control[GOOMBA_EVENT_SELECT].value = SDLK_RETURN;
+	config->control[GOOMBA_EVENT_BACK].value   = SDLK_BACKSPACE;
 	config->control[GOOMBA_EVENT_QUIT].value   = SDLK_ESCAPE;
 
 	return 0;
