@@ -1,4 +1,4 @@
-PREFIX = /usr
+PREFIX = /usr/local/pandora/arm-2009q3/usr
 
 CC = arm-none-linux-gnueabi-gcc
 LD = arm-none-linux-gnueabi-gcc
