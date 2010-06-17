@@ -4,6 +4,9 @@
 #include <goomba/control.h>
 #include <goomba/font.h>
 #include <goomba/gui.h>
+#include <goomba/key.h>
+
+#define HELP_LEN 128
 
 static const int AXIS_THRESHOLD = 16000;
 static const int BALL_THRESHOLD = 10;
@@ -82,8 +85,8 @@ int goomba_gui_draw_text( char *text_left, char *text_right, int y ) {
 	SDL_Rect offset;
 	int end;
 	
-	sl = goomba_font_render( text_left );
-	sr = goomba_font_render( text_right );
+	sl = goomba_font_render( text_left, GOOMBA_FONT_LARGE );
+	sr = goomba_font_render( text_right, GOOMBA_FONT_LARGE );
 
 	offset.y = y;
 	if( sl ) {
@@ -107,7 +110,7 @@ int goomba_gui_draw_text( char *text_left, char *text_right, int y ) {
 
 		offset.x = screen->w - bar.offset - bar.margin - sr->w;			
 		if( offset.x < end ) {
-			dots = goomba_font_render( "..." );
+			dots = goomba_font_render( "...", GOOMBA_FONT_LARGE );
 			if( dots ) {
 				chop.x = (end - offset.x);
 				offset.x += (end - offset.x);
@@ -201,7 +204,7 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 				if( item->text && *item->text ) {
 					/* Draw the title. */
 					SDL_Rect menu_offset;
-					SDL_Surface *s = goomba_font_render( item->text );
+					SDL_Surface *s = goomba_font_render( item->text, GOOMBA_FONT_LARGE );
 				
 					if( s == NULL ) {
 						fprintf( stderr, "Couldn't render menu title text \"%s\".\n", item->text );
@@ -610,7 +613,10 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 
 int goomba_gui_start( struct goomba_gui *gui, SDL_Surface *s ) {
 	SDL_Surface *tmp = NULL;
+	SDL_Rect offset;
 	Uint32 color = 0;
+	char help[HELP_LEN] = "";
+	char help_ctrl[4][HELP_LEN/4];
 
 	screen = s;
 	
@@ -658,8 +664,27 @@ int goomba_gui_start( struct goomba_gui *gui, SDL_Surface *s ) {
 	bar.height = (gui->config.font.size * 100) / 80;
 	bar.margin = (bar.height - gui->config.font.size) / 2;
 	bar.offset = (screen->w - bar.width) / 2;
-	max_items = (screen->h / bar.height) - 2;
+	max_items = (screen->h / bar.height) - 3;
 	if( max_items < 1 ) max_items = 1;
+	
+	if( gui->config.help ) {
+		/* Build the help text. */
+		goomba_control_string( help_ctrl[0], HELP_LEN/4, &gui->config.control[GOOMBA_EVENT_SELECT] );
+		goomba_control_string( help_ctrl[1], HELP_LEN/4, &gui->config.control[GOOMBA_EVENT_BACK] );
+		goomba_control_string( help_ctrl[2], HELP_LEN/4, &gui->config.control[GOOMBA_EVENT_SKIP_B] );
+		goomba_control_string( help_ctrl[3], HELP_LEN/4, &gui->config.control[GOOMBA_EVENT_SKIP_F] );
+		
+		snprintf( help, HELP_LEN, "%s = Select/OK    %s = Back/Cancel    %s/%s = Skip",
+			help_ctrl[0], help_ctrl[1], help_ctrl[2], help_ctrl[3] );
+	
+		/* Blit text to the bottom of the background. */	
+		tmp = goomba_font_render( help, GOOMBA_FONT_SMALL );
+		offset.x = (screen->w - tmp->w) / 2;
+		offset.y = screen->h - tmp->h - (tmp->h/2);
+		SDL_BlitSurface( tmp, NULL, bg, &offset );
+		SDL_FreeSurface( tmp );
+		tmp = NULL;
+	}
 	
 	/* Surface used for the menu selection bar. */
 	tmp = SDL_CreateRGBSurface( SDL_SWSURFACE|SDL_SRCALPHA, bar.width,

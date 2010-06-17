@@ -75,6 +75,8 @@ int main( int argc, char *argv[] ) {
 	memset( buffer, 0, STRING_LEN-1 );
 	memset( file, 0, FILE_LEN-1 );
 
+	gui->config.help = 1;
+
 	gui->config.font.name = "/usr/share/fonts/truetype/freefont/FreeSans.ttf";
 
 	item_exit->callback = quit_callback;

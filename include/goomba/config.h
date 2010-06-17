@@ -44,6 +44,7 @@ struct goomba_config {
 	struct goomba_config_font font;
 	struct goomba_config_selector selector;
 	struct goomba_control control[GOOMBA_EVENTS];
+	int help;
 };
 
 #ifdef __cplusplus
