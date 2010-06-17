@@ -57,14 +57,14 @@ int sdl_init( void ) {
 
 int main( int argc, char *argv[] ) {
 	struct goomba_gui *gui = goomba_gui_create();
-	struct goomba_item *item_exit = goomba_item_create( GOOMBA_ACTION );
-	struct goomba_item *item_back = goomba_item_create( GOOMBA_ACTION );
-	struct goomba_item *item_number = goomba_item_create( GOOMBA_INT );
-	struct goomba_item *item_enum = goomba_item_create( GOOMBA_ENUM );
-	struct goomba_item *item_submenu = goomba_item_create( GOOMBA_MENU );
-	struct goomba_item *item_string = goomba_item_create( GOOMBA_STRING );
-	struct goomba_item *item_ctrl = goomba_item_create( GOOMBA_CONTROL );
-	struct goomba_item *item_file = goomba_item_create( GOOMBA_FILESEL );
+	struct goomba_item *item_exit = goomba_item_create( GOOMBA_ITEM_ACTION );
+	struct goomba_item *item_back = goomba_item_create( GOOMBA_ITEM_ACTION );
+	struct goomba_item *item_number = goomba_item_create( GOOMBA_ITEM_INT );
+	struct goomba_item *item_enum = goomba_item_create( GOOMBA_ITEM_ENUM );
+	struct goomba_item *item_submenu = goomba_item_create( GOOMBA_ITEM_MENU );
+	struct goomba_item *item_string = goomba_item_create( GOOMBA_ITEM_STRING );
+	struct goomba_item *item_ctrl = goomba_item_create( GOOMBA_ITEM_CONTROL );
+	struct goomba_item *item_file = goomba_item_create( GOOMBA_ITEM_FILESEL );
 	struct goomba_control control;
 
 	int int_val = 0;
@@ -109,9 +109,9 @@ int main( int argc, char *argv[] ) {
 	item_file->text = "File name";
 	item_file->filesel_data.value = &file[0];
 	item_file->filesel_data.size = FILE_LEN;
-	item_file->action = GOOMBA_EXIT;
+	item_file->action = GOOMBA_ACTION_EXIT;
 
-	gui->root = goomba_item_create( GOOMBA_MENU );
+	gui->root = goomba_item_create( GOOMBA_ITEM_MENU );
 	gui->root->text = "Main Menu";
 
 	goomba_item_append_child( gui->root, item_enum );

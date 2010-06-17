@@ -19,14 +19,14 @@ int goomba_config_init( struct goomba_config *config ) {
 	for( i = 0; i < GOOMBA_EVENTS ; i++ ) {
 		config->control[i].device_type = GOOMBA_DEV_KEYBOARD;
 	}
-	config->control[GOOMBA_UP].value     = SDLK_UP;
-	config->control[GOOMBA_DOWN].value   = SDLK_DOWN;
-	config->control[GOOMBA_LEFT].value   = SDLK_LEFT;
-	config->control[GOOMBA_RIGHT].value  = SDLK_RIGHT;
-	config->control[GOOMBA_SKIP_F].value = SDLK_PAGEDOWN;
-	config->control[GOOMBA_SKIP_B].value = SDLK_PAGEUP;
-	config->control[GOOMBA_SELECT].value = SDLK_RETURN;
-	config->control[GOOMBA_QUIT].value   = SDLK_ESCAPE;
+	config->control[GOOMBA_EVENT_UP].value     = SDLK_UP;
+	config->control[GOOMBA_EVENT_DOWN].value   = SDLK_DOWN;
+	config->control[GOOMBA_EVENT_LEFT].value   = SDLK_LEFT;
+	config->control[GOOMBA_EVENT_RIGHT].value  = SDLK_RIGHT;
+	config->control[GOOMBA_EVENT_SKIP_F].value = SDLK_PAGEDOWN;
+	config->control[GOOMBA_EVENT_SKIP_B].value = SDLK_PAGEUP;
+	config->control[GOOMBA_EVENT_SELECT].value = SDLK_RETURN;
+	config->control[GOOMBA_EVENT_QUIT].value   = SDLK_ESCAPE;
 
 	return 0;
 }

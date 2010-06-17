@@ -12,4 +12,3 @@ const char *goomba_key_name( int key );
 #endif
 
 #endif
-

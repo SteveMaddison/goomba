@@ -5,11 +5,6 @@
 #include <goomba/font.h>
 #include <goomba/gui.h>
 
-typedef enum {
-	GOOMBA_ALIGN_LEFT,
-	GOOMBA_ALIGN_RIGHT
-} goomba_align_t;
-
 static const int AXIS_THRESHOLD = 16000;
 static const int BALL_THRESHOLD = 10;
 static const int MOUSE_THRESHOLD = 10;
@@ -148,7 +143,7 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 
 	/* Offset of -1 indicate automatic placement. */
 	if( y < 0 ) {
-		if( item->type == GOOMBA_MENU ) {
+		if( item->type == GOOMBA_ITEM_MENU ) {
 			sub_items = goomba_item_child_count( item );
 			if( item->text && *item->text ) {
 				/* Hack to make space for the title. */
@@ -168,36 +163,36 @@ int goomba_gui_draw_item( struct goomba_item *item, int y, int stop ) {
 	}
 
 	switch( item->type ) {
-		case GOOMBA_INT:
+		case GOOMBA_ITEM_INT:
 			if( item->int_data.value ) {
 				snprintf( tmp, 32, "%d", *item->int_data.value );
 			}
 			goomba_gui_draw_text( item->text, tmp, offset + bar.margin );
 			break;
-		case GOOMBA_ENUM:
+		case GOOMBA_ITEM_ENUM:
 			goomba_gui_draw_text( item->text,
 				(item->enum_data.selected && item->enum_data.selected->name) ? item->enum_data.selected->name : "",
 				offset + bar.margin );
 			break;
-		case GOOMBA_STRING:
+		case GOOMBA_ITEM_STRING:
 			goomba_gui_draw_text( item->text, item->string_data.value, offset + bar.margin );
 			break;
-		case GOOMBA_CONTROL:
+		case GOOMBA_ITEM_CONTROL:
 			goomba_control_string( tmp, 32, item->control_data.control );
 			goomba_gui_draw_text( item->text, tmp, offset + bar.margin );
 			break;
-		case GOOMBA_FILESEL:
+		case GOOMBA_ITEM_FILESEL:
 			goomba_gui_draw_text( item->text,
 				(item->filesel_data.value && *item->filesel_data.value) ? item->filesel_data.value : "...",
 				offset + bar.margin );
 			break;
-		case GOOMBA_FILE:
+		case GOOMBA_ITEM_FILE:
 			goomba_gui_draw_text( item->text, item->file_data.dir ? "[DIR]" : NULL, offset + bar.margin );
 			break;
-		case GOOMBA_ACTION:
+		case GOOMBA_ITEM_ACTION:
 			goomba_gui_draw_text( item->text, NULL, offset + bar.margin );
 			break;
-		case GOOMBA_MENU: 
+		case GOOMBA_ITEM_MENU: 
 			if( stop ) {
 				goomba_gui_draw_text( item->text, NULL, offset + bar.margin );
 			}
@@ -395,34 +390,34 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 			}
 		
 			switch( event ) {
-				case GOOMBA_UP:
-					if( current_item->type == GOOMBA_MENU ) {
+				case GOOMBA_EVENT_UP:
+					if( current_item->type == GOOMBA_ITEM_MENU ) {
 						goomba_item_retreat( current_item );
 					}
 					break;
-				case GOOMBA_DOWN:
-					if( current_item->type == GOOMBA_MENU ) {
+				case GOOMBA_EVENT_DOWN:
+					if( current_item->type == GOOMBA_ITEM_MENU ) {
 						goomba_item_advance( current_item );
 					}
 					break;
-				case GOOMBA_LEFT:
-					if( current_item->type == GOOMBA_MENU ) {
+				case GOOMBA_EVENT_LEFT:
+					if( current_item->type == GOOMBA_ITEM_MENU ) {
 						goomba_item_retreat( current_item->menu_data.selected );
 					}
 					else {
 						goomba_item_retreat( current_item );
 					}
 					break;
-				case GOOMBA_RIGHT:
-					if( current_item->type == GOOMBA_MENU ) {
+				case GOOMBA_EVENT_RIGHT:
+					if( current_item->type == GOOMBA_ITEM_MENU ) {
 						goomba_item_advance( current_item->menu_data.selected );
 					}
 					else {
 						goomba_item_advance( current_item );
 					}
 					break;
-				case GOOMBA_SKIP_F:
-					if( current_item->type == GOOMBA_MENU ) {
+				case GOOMBA_EVENT_SKIP_F:
+					if( current_item->type == GOOMBA_ITEM_MENU ) {
 						int skip = max_items;
 						
 						if( current_item->text ) {
@@ -435,8 +430,8 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 						}
 					}
 					break;
-				case GOOMBA_SKIP_B:
-					if( current_item->type == GOOMBA_MENU ) {
+				case GOOMBA_EVENT_SKIP_B:
+					if( current_item->type == GOOMBA_ITEM_MENU ) {
 						int skip = max_items;
 						
 						if( current_item->text ) {
@@ -449,22 +444,22 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 						}
 					}
 					break;
-				case GOOMBA_SELECT: {
+				case GOOMBA_EVENT_SELECT: {
 						struct goomba_item *selected = current_item;
 						
-						if( current_item->type == GOOMBA_MENU ) {
+						if( current_item->type == GOOMBA_ITEM_MENU ) {
 							selected = current_item->menu_data.selected;
 						}
 							
 						switch( selected->type ) {
-							case GOOMBA_MENU:
+							case GOOMBA_ITEM_MENU:
 								/* Nested menu */
 								current_item = selected;
 								/* Select first item. */
 								current_item->menu_data.selected = current_item->menu_data.items;
 								break;
 								
-							case GOOMBA_FILESEL: {
+							case GOOMBA_ITEM_FILESEL: {
 									char *dir = selected->filesel_data.directory;
 									if( selected->filesel_data.value && *selected->filesel_data.value ) {
 										char *slash = strrchr( selected->filesel_data.value, '/' );
@@ -481,7 +476,7 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 								}
 								break;
 	
-							case GOOMBA_FILE: {
+							case GOOMBA_ITEM_FILE: {
 									struct goomba_item *menu = selected->parent;
 									struct goomba_item *p = menu->menu_data.items;
 									
@@ -532,7 +527,7 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 										if( menu->parent->callback ) {
 											menu->parent->callback( menu->parent );
 										}
-										if( menu->parent->action == GOOMBA_EXIT ) {
+										if( menu->parent->action == GOOMBA_ACTION_EXIT ) {
 											quit = 1;
 										}
 									}
@@ -547,14 +542,14 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 								}
 								break;
 	
-							case GOOMBA_ACTION:
-								if( selected->action == GOOMBA_BACK ) {
+							case GOOMBA_ITEM_ACTION:
+								if( selected->action == GOOMBA_ACTION_BACK ) {
 									current_item = selected->parent;
-									if( current_item->type == GOOMBA_MENU ) {
+									if( current_item->type == GOOMBA_ITEM_MENU ) {
 										current_item = current_item->parent;
 									}
 								}
-								else if( selected->action == GOOMBA_EXIT ) {
+								else if( selected->action == GOOMBA_ACTION_EXIT ) {
 									quit = 1;
 								}
 								if( selected->callback ) {
@@ -562,7 +557,7 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 								}
 								break;
 	
-							case GOOMBA_CONTROL: {
+							case GOOMBA_ITEM_CONTROL: {
 									int original = selected->control_data.control->device_type;
 						
 									/* Redraw item/menu with empty value. */
@@ -586,7 +581,7 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 					}
 					break;
 
-				case GOOMBA_QUIT:
+				case GOOMBA_EVENT_QUIT:
 					quit = 1;
 					break;
 				default:
@@ -597,7 +592,7 @@ void goomba_gui_event_loop( struct goomba_config *config ) {
 				quit = 1;
 			}
 
-			if( event >= 0 && event < GOOMBA_QUIT ) {
+			if( event >= 0 && event < GOOMBA_EVENT_QUIT ) {
 				if( !quit ) {
 					goomba_gui_draw();
 				}
