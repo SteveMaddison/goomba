@@ -414,6 +414,37 @@ struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *sta
 	return menu;
 }
 
+int goomba_item_refresh( struct goomba_item *item ) {
+	if( item ) {
+		switch( item->type ) {
+			case GOOMBA_ITEM_ENUM:
+				while( item->enum_data.selected->value != *(item->enum_data.value)
+				&& item->enum_data.selected != item->enum_data.options->prev ) {
+					item->enum_data.selected = item->enum_data.selected->next;
+				}				
+				if( item->enum_data.selected->value != *(item->enum_data.value) ) {
+					item->enum_data.selected = item->enum_data.options;
+					return -1;
+				}
+				return 0;
+				break;
+			case GOOMBA_ITEM_MENU:
+				if( item->menu_data.items ) {
+					struct goomba_item *p = item->menu_data.items;
+
+					do {
+						goomba_item_refresh( p );
+						p = p->next;
+					} while( p != item->menu_data.items );
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	return -1;
+}
+
 void goomba_item_dump( struct goomba_item *item ) {
 	static int indent = 0;
 

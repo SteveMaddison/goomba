@@ -108,6 +108,7 @@ int goomba_add_enum_option( struct goomba_item *enum_item, char *name, int value
 void goomba_item_advance( struct goomba_item *item );
 void goomba_item_retreat( struct goomba_item *item );
 struct goomba_item *goomba_item_file_selector( char *buffer, int size, char *start, struct goomba_item *parent );
+int goomba_item_refresh( struct goomba_item *item );
 
 void goomba_item_dump( struct goomba_item *item );
 
